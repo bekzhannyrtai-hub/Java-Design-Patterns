@@ -1,0 +1,164 @@
+import java.util.List;
+import java.util.ArrayList;
+
+public class SOLIDPrinciples {
+
+    public static class Order {
+        private String productName;
+        private int quantity;
+        private double price;
+
+        public Order(String productName, int quantity, double price) {
+            this.productName = productName;
+            this.quantity = quantity;
+            this.price = price;
+        }
+
+        public String getProductName() { return productName; }
+        public int getQuantity() { return quantity; }
+        public double getPrice() { return price; }
+    }
+
+    public static class PriceCalculator {
+        public double calculateTotalPrice(Order order) {
+            return order.getQuantity() * order.getPrice() * 0.9;
+        }
+    }
+
+    public static class PaymentProcessor {
+        public void processPayment(String paymentDetails) {
+            System.out.println("Payment processed using: " + paymentDetails);
+        }
+    }
+
+    public static class EmailService {
+        public void sendConfirmationEmail(String email) {
+            System.out.println("Confirmation email sent to: " + email);
+        }
+    }
+
+    public static abstract class Employee {
+        private String name;
+        private double baseSalary;
+
+        public Employee(String name, double baseSalary) {
+            this.name = name;
+            this.baseSalary = baseSalary;
+        }
+
+        public String getName() { return name; }
+        public double getBaseSalary() { return baseSalary; }
+        public abstract double calculateSalary();
+    }
+
+    public static class PermanentEmployee extends Employee {
+        public PermanentEmployee(String name, double baseSalary) {
+            super(name, baseSalary);
+        }
+
+        @Override
+        public double calculateSalary() {
+            return getBaseSalary() * 1.2;
+        }
+    }
+
+    public static class ContractEmployee extends Employee {
+        public ContractEmployee(String name, double baseSalary) {
+            super(name, baseSalary);
+        }
+
+        @Override
+        public double calculateSalary() {
+            return getBaseSalary() * 1.1;
+        }
+    }
+
+    public static class InternEmployee extends Employee {
+        public InternEmployee(String name, double baseSalary) {
+            super(name, baseSalary);
+        }
+
+        @Override
+        public double calculateSalary() {
+            return getBaseSalary() * 0.8;
+        }
+    }
+
+    public static class EmployeeSalaryCalculator {
+        public double calculateSalary(Employee employee) {
+            return employee.calculateSalary();
+        }
+    }
+
+    public interface Printer {
+        void print(String content);
+    }
+
+    public interface Scanner {
+        void scan(String content);
+    }
+
+    public interface Fax {
+        void fax(String content);
+    }
+
+    public static class AllInOnePrinter implements Printer, Scanner, Fax {
+        @Override
+        public void print(String content) {
+            System.out.println("Printing: " + content);
+        }
+
+        @Override
+        public void scan(String content) {
+            System.out.println("Scanning: " + content);
+        }
+
+        @Override
+        public void fax(String content) {
+            System.out.println("Faxing: " + content);
+        }
+    }
+
+    public static class BasicPrinter implements Printer {
+        @Override
+        public void print(String content) {
+            System.out.println("Printing: " + content);
+        }
+    }
+
+    public interface NotificationSender {
+        void send(String message);
+    }
+
+    public static class EmailSender implements NotificationSender {
+        @Override
+        public void send(String message) {
+            System.out.println("Email sent: " + message);
+        }
+    }
+
+    public static class SmsSender implements NotificationSender {
+        @Override
+        public void send(String message) {
+            System.out.println("SMS sent: " + message);
+        }
+    }
+
+    public static class NotificationService {
+        private List<NotificationSender> senders;
+
+        public NotificationService(List<NotificationSender> senders) {
+            this.senders = senders;
+        }
+
+        public void sendNotification(String message) {
+            for (NotificationSender sender : senders) {
+                sender.send(message);
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println("SOLID Principles Implementation in Java");
+    }
+}
