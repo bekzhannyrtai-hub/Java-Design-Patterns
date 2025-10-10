@@ -1,0 +1,154 @@
+public class SingletonDemo {
+    public static void main(String[] args) {
+        ConfigurationManager config1 = ConfigurationManager.getInstance();
+        ConfigurationManager config2 = ConfigurationManager.getInstance();
+
+        config1.setSetting("theme", "dark");
+        config1.setSetting("language", "Kazakh");
+
+        System.out.println("Theme: " + config2.getSetting("theme"));
+        System.out.println("Language: " + config2.getSetting("language"));
+        System.out.println("Один и тот же объект: " + (config1 == config2));
+    }
+}
+
+class ConfigurationManager {
+    private static ConfigurationManager instance;
+    private java.util.Map<String, String> settings = new java.util.HashMap<>();
+
+    private ConfigurationManager() {}
+
+    public static synchronized ConfigurationManager getInstance() {
+        if (instance == null) {
+            instance = new ConfigurationManager();
+        }
+        return instance;
+    }
+
+    public void setSetting(String key, String value) {
+        settings.put(key, value);
+    }
+
+    public String getSetting(String key) {
+        return settings.get(key);
+    }
+}
+
+interface IReportBuilder {
+    void setHeader(String header);
+    void setContent(String content);
+    void setFooter(String footer);
+    Report getReport();
+}
+
+class Report {
+    private String header;
+    private String content;
+    private String footer;
+
+    public void setHeader(String header) { this.header = header; }
+    public void setContent(String content) { this.content = content; }
+    public void setFooter(String footer) { this.footer = footer; }
+
+    public String toString() {
+        return header + "\n" + content + "\n" + footer;
+    }
+}
+
+class TextReportBuilder implements IReportBuilder {
+    private Report report = new Report();
+
+    public void setHeader(String header) { report.setHeader("=== " + header + " ==="); }
+    public void setContent(String content) { report.setContent(content); }
+    public void setFooter(String footer) { report.setFooter("--- " + footer + " ---"); }
+    public Report getReport() { return report; }
+}
+
+class HtmlReportBuilder implements IReportBuilder {
+    private Report report = new Report();
+
+    public void setHeader(String header) { report.setHeader("<h1>" + header + "</h1>"); }
+    public void setContent(String content) { report.setContent("<p>" + content + "</p>"); }
+    public void setFooter(String footer) { report.setFooter("<footer>" + footer + "</footer>"); }
+    public Report getReport() { return report; }
+}
+
+class ReportDirector {
+    public void constructReport(IReportBuilder builder, String header, String content, String footer) {
+        builder.setHeader(header);
+        builder.setContent(content);
+        builder.setFooter(footer);
+    }
+}
+
+public class BuilderDemo {
+    public static void main(String[] args) {
+        ReportDirector director = new ReportDirector();
+
+        IReportBuilder textBuilder = new TextReportBuilder();
+        director.constructReport(textBuilder, "Text Report", "This is a sample report.", "End of Report");
+        System.out.println(textBuilder.getReport());
+
+        IReportBuilder htmlBuilder = new HtmlReportBuilder();
+        director.constructReport(htmlBuilder, "HTML Report", "This is a sample HTML report.", "End of HTML Report");
+        System.out.println(htmlBuilder.getReport());
+    }
+}
+
+import java.util.ArrayList;
+import java.util.List;
+
+class Product implements Cloneable {
+    String name;
+    double price;
+
+    Product(String name, double price) {
+        this.name = name;
+        this.price = price;
+    }
+
+    public Product clone() {
+        return new Product(this.name, this.price);
+    }
+}
+
+class Order implements Cloneable {
+    List<Product> products = new ArrayList<>();
+    double deliveryCost;
+    double discount;
+    String paymentMethod;
+
+    public Order clone() {
+        Order cloned = new Order();
+        for (Product p : this.products) {
+            cloned.products.add(p.clone());
+        }
+        cloned.deliveryCost = this.deliveryCost;
+        cloned.discount = this.discount;
+        cloned.paymentMethod = this.paymentMethod;
+        return cloned;
+    }
+
+    public double getTotal() {
+        double total = deliveryCost;
+        for (Product p : products) total += p.price;
+        total -= discount;
+        return total;
+    }
+}
+
+public class PrototypeDemo {
+    public static void main(String[] args) {
+        Order original = new Order();
+        original.products.add(new Product("Phone", 500));
+        original.products.add(new Product("Headphones", 100));
+        original.deliveryCost = 20;
+        original.discount = 30;
+        original.paymentMethod = "Card";
+
+        Order clone = original.clone();
+        clone.products.get(0).price = 450;
+
+        System.out.println("Original total: " + original.getTotal());
+        System.out.println("Cloned total: " + clone.getTotal());
+    }
