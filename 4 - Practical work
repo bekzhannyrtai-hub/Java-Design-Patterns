@@ -1,0 +1,98 @@
+import java.util.Scanner;
+
+interface Document {
+    void Open();
+}
+
+class Report implements Document {
+    public void Open() {
+        System.out.println("📊 Отчет ашылды (Report opened)");
+    }
+}
+
+class Resume implements Document {
+    public void Open() {
+        System.out.println("📄 Резюме ашылды (Resume opened)");
+    }
+}
+
+class Letter implements Document {
+    public void Open() {
+        System.out.println("✉️ Письмо ашылды (Letter opened)");
+    }
+}
+
+class Invoice implements Document {
+    public void Open() {
+        System.out.println("🧾 Шот-фактура ашылды (Invoice opened)");
+    }
+}
+
+abstract class DocumentCreator {
+    public abstract Document CreateDocument();
+}
+
+class ReportCreator extends DocumentCreator {
+    public Document CreateDocument() {
+        return new Report();
+    }
+}
+
+class ResumeCreator extends DocumentCreator {
+    public Document CreateDocument() {
+        return new Resume();
+    }
+}
+
+class LetterCreator extends DocumentCreator {
+    public Document CreateDocument() {
+        return new Letter();
+    }
+}
+
+class InvoiceCreator extends DocumentCreator {
+    public Document CreateDocument() {
+        return new Invoice();
+    }
+}
+
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Құжат түрін таңдаңыз:");
+        System.out.println("1 - Report");
+        System.out.println("2 - Resume");
+        System.out.println("3 - Letter");
+        System.out.println("4 - Invoice");
+        System.out.print("Таңдау: ");
+
+        int choice = scanner.nextInt();
+
+        DocumentCreator creator = null;
+
+        switch (choice) {
+            case 1:
+                creator = new ReportCreator();
+                break;
+            case 2:
+                creator = new ResumeCreator();
+                break;
+            case 3:
+                creator = new LetterCreator();
+                break;
+            case 4:
+                creator = new InvoiceCreator();
+                break;
+            default:
+                System.out.println("⚠️ Белгісіз таңдау!");
+                System.exit(0);
+        }
+
+        Document doc = creator.CreateDocument();
+        doc.Open();
+
+        scanner.close();
+    }
+}
