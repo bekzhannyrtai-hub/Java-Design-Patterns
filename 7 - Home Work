@@ -1,0 +1,192 @@
+import java.util.*;
+
+interface Command {
+    void execute();
+    void undo();
+}
+
+class Light {
+    void on() { System.out.println("Свет включен"); }
+    void off() { System.out.println("Свет выключен"); }
+}
+
+class Door {
+    void open() { System.out.println("Дверь открыта"); }
+    void close() { System.out.println("Дверь закрыта"); }
+}
+
+class Thermostat {
+    private int temperature = 20;
+    void increase() { temperature++; System.out.println("Температура: " + temperature); }
+    void decrease() { temperature--; System.out.println("Температура: " + temperature); }
+}
+
+class LightOnCommand implements Command {
+    private Light light;
+    LightOnCommand(Light light) { this.light = light; }
+    public void execute() { light.on(); }
+    public void undo() { light.off(); }
+}
+
+class LightOffCommand implements Command {
+    private Light light;
+    LightOffCommand(Light light) { this.light = light; }
+    public void execute() { light.off(); }
+    public void undo() { light.on(); }
+}
+
+class DoorOpenCommand implements Command {
+    private Door door;
+    DoorOpenCommand(Door door) { this.door = door; }
+    public void execute() { door.open(); }
+    public void undo() { door.close(); }
+}
+
+class DoorCloseCommand implements Command {
+    private Door door;
+    DoorCloseCommand(Door door) { this.door = door; }
+    public void execute() { door.close(); }
+    public void undo() { door.open(); }
+}
+
+class TempIncreaseCommand implements Command {
+    private Thermostat thermostat;
+    TempIncreaseCommand(Thermostat thermostat) { this.thermostat = thermostat; }
+    public void execute() { thermostat.increase(); }
+    public void undo() { thermostat.decrease(); }
+}
+
+class TempDecreaseCommand implements Command {
+    private Thermostat thermostat;
+    TempDecreaseCommand(Thermostat thermostat) { this.thermostat = thermostat; }
+    public void execute() { thermostat.decrease(); }
+    public void undo() { thermostat.increase(); }
+}
+
+class RemoteControl {
+    private Stack<Command> history = new Stack<>();
+    void submit(Command command) {
+        command.execute();
+        history.push(command);
+    }
+    void undo() {
+        if (!history.isEmpty()) {
+            history.pop().undo();
+        } else {
+            System.out.println("Нет команд для отмены");
+        }
+    }
+}
+
+class CommandDemo {
+    public static void main(String[] args) {
+        Light light = new Light();
+        Door door = new Door();
+        Thermostat thermostat = new Thermostat();
+        RemoteControl remote = new RemoteControl();
+
+        remote.submit(new LightOnCommand(light));
+        remote.submit(new DoorOpenCommand(door));
+        remote.submit(new TempIncreaseCommand(thermostat));
+        remote.undo();
+        remote.undo();
+        remote.undo();
+    }
+}
+
+abstract class Beverage {
+    final void prepareRecipe() {
+        boilWater();
+        brew();
+        pourInCup();
+        if (customerWantsCondiments()) {
+            addCondiments();
+        }
+    }
+    abstract void brew();
+    abstract void addCondiments();
+    void boilWater() { System.out.println("Кипятим воду"); }
+    void pourInCup() { System.out.println("Наливаем в чашку"); }
+    boolean customerWantsCondiments() { return true; }
+}
+
+class Tea extends Beverage {
+    void brew() { System.out.println("Завариваем чай"); }
+    void addCondiments() { System.out.println("Добавляем лимон"); }
+}
+
+class Coffee extends Beverage {
+    void brew() { System.out.println("Завариваем кофе"); }
+    void addCondiments() { System.out.println("Добавляем сахар и молоко"); }
+    boolean customerWantsCondiments() {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Добавить сахар и молоко? (y/n)");
+        String answer = sc.nextLine();
+        return answer.equalsIgnoreCase("y");
+    }
+}
+
+class TemplateMethodDemo {
+    public static void main(String[] args) {
+        Beverage tea = new Tea();
+        Beverage coffee = new Coffee();
+
+        tea.prepareRecipe();
+        System.out.println();
+        coffee.prepareRecipe();
+    }
+}
+
+import java.util.*;
+
+interface Mediator {
+    void sendMessage(String message, User user);
+    void addUser(User user);
+}
+
+class ChatRoom implements Mediator {
+    private List<User> users = new ArrayList<>();
+    public void addUser(User user) {
+        users.add(user);
+        System.out.println(user.getName() + " присоединился к чату");
+    }
+    public void sendMessage(String message, User sender) {
+        for (User user : users) {
+            if (user != sender) {
+                user.receive(message, sender);
+            }
+        }
+    }
+}
+
+abstract class User {
+    protected Mediator mediator;
+    protected String name;
+    User(Mediator mediator, String name) { this.mediator = mediator; this.name = name; }
+    String getName() { return name; }
+    abstract void send(String message);
+    abstract void receive(String message, User sender);
+}
+
+class ChatUser extends User {
+    ChatUser(Mediator mediator, String name) { super(mediator, name); }
+    void send(String message) { mediator.sendMessage(message, this); }
+    void receive(String message, User sender) { System.out.println(sender.getName() + " -> " + name + ": " + message); }
+}
+
+class MediatorDemo {
+    public static void main(String[] args) {
+        ChatRoom chatRoom = new ChatRoom();
+        User user1 = new ChatUser(chatRoom, "Алина");
+        User user2 = new ChatUser(chatRoom, "Бекжан");
+        User user3 = new ChatUser(chatRoom, "Сауле");
+
+        chatRoom.addUser(user1);
+        chatRoom.addUser(user2);
+        chatRoom.addUser(user3);
+
+        user1.send("Привет всем!");
+        user2.send("Привет, Алина!");
+        user3.send("Всем привет!");
+    }
+}
