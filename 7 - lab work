@@ -1,0 +1,223 @@
+interface ICommand {
+    void execute();
+    void undo();
+}
+
+class Light {
+    void on() {
+        System.out.println("Свет включен.");
+    }
+    void off() {
+        System.out.println("Свет выключен.");
+    }
+}
+
+class Television {
+    void on() {
+        System.out.println("Телевизор включен.");
+    }
+    void off() {
+        System.out.println("Телевизор выключен.");
+    }
+}
+
+class AirConditioner {
+    void on() {
+        System.out.println("Кондиционер включен.");
+    }
+    void off() {
+        System.out.println("Кондиционер выключен.");
+    }
+}
+
+class LightOnCommand implements ICommand {
+    private Light light;
+    LightOnCommand(Light light) { this.light = light; }
+    public void execute() { light.on(); }
+    public void undo() { light.off(); }
+}
+
+class LightOffCommand implements ICommand {
+    private Light light;
+    LightOffCommand(Light light) { this.light = light; }
+    public void execute() { light.off(); }
+    public void undo() { light.on(); }
+}
+
+class TelevisionOnCommand implements ICommand {
+    private Television tv;
+    TelevisionOnCommand(Television tv) { this.tv = tv; }
+    public void execute() { tv.on(); }
+    public void undo() { tv.off(); }
+}
+
+class TelevisionOffCommand implements ICommand {
+    private Television tv;
+    TelevisionOffCommand(Television tv) { this.tv = tv; }
+    public void execute() { tv.off(); }
+    public void undo() { tv.on(); }
+}
+
+class AirConditionerOnCommand implements ICommand {
+    private AirConditioner ac;
+    AirConditionerOnCommand(AirConditioner ac) { this.ac = ac; }
+    public void execute() { ac.on(); }
+    public void undo() { ac.off(); }
+}
+
+class AirConditionerOffCommand implements ICommand {
+    private AirConditioner ac;
+    AirConditionerOffCommand(AirConditioner ac) { this.ac = ac; }
+    public void execute() { ac.off(); }
+    public void undo() { ac.on(); }
+}
+
+class RemoteControl {
+    private ICommand onCommand;
+    private ICommand offCommand;
+    void setCommands(ICommand onCommand, ICommand offCommand) {
+        this.onCommand = onCommand;
+        this.offCommand = offCommand;
+    }
+    void pressOnButton() {
+        if (onCommand != null) onCommand.execute();
+        else System.out.println("Нет команды на включение");
+    }
+    void pressOffButton() {
+        if (offCommand != null) offCommand.execute();
+        else System.out.println("Нет команды на выключение");
+    }
+    void pressUndoButton() {
+        if (onCommand != null) onCommand.undo();
+        else System.out.println("Нечего отменять");
+    }
+}
+
+abstract class Beverage {
+    public final void prepareRecipe() {
+        boilWater();
+        brew();
+        pourInCup();
+        addCondiments();
+    }
+    private void boilWater() {
+        System.out.println("Кипячение воды...");
+    }
+    private void pourInCup() {
+        System.out.println("Наливание в чашку...");
+    }
+    protected abstract void brew();
+    protected abstract void addCondiments();
+}
+
+class Tea extends Beverage {
+    protected void brew() {
+        System.out.println("Заваривание чая...");
+    }
+    protected void addCondiments() {
+        System.out.println("Добавление лимона...");
+    }
+}
+
+class Coffee extends Beverage {
+    protected void brew() {
+        System.out.println("Заваривание кофе...");
+    }
+    protected void addCondiments() {
+        System.out.println("Добавление сахара и молока...");
+    }
+}
+
+class HotChocolate extends Beverage {
+    protected void brew() {
+        System.out.println("Приготовление горячего шоколада...");
+    }
+    protected void addCondiments() {
+        System.out.println("Добавление маршмеллоу...");
+    }
+}
+
+interface IMediator {
+    void sendMessage(String message, Colleague colleague);
+    void registerColleague(Colleague colleague);
+}
+
+abstract class Colleague {
+    protected IMediator mediator;
+    Colleague(IMediator mediator) { this.mediator = mediator; }
+    abstract void receiveMessage(String message);
+}
+
+class ChatMediator implements IMediator {
+    private java.util.List<Colleague> colleagues = new java.util.ArrayList<>();
+    public void registerColleague(Colleague colleague) { colleagues.add(colleague); }
+    public void sendMessage(String message, Colleague sender) {
+        for (Colleague c : colleagues) {
+            if (c != sender) c.receiveMessage(message);
+        }
+    }
+}
+
+class User extends Colleague {
+    private String name;
+    User(IMediator mediator, String name) {
+        super(mediator);
+        this.name = name;
+    }
+    void send(String message) {
+        System.out.println(name + " отправляет сообщение: " + message);
+        mediator.sendMessage(message, this);
+    }
+    void receiveMessage(String message) {
+        System.out.println(name + " получил сообщение: " + message);
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Light light = new Light();
+        Television tv = new Television();
+        AirConditioner ac = new AirConditioner();
+        ICommand lightOn = new LightOnCommand(light);
+        ICommand lightOff = new LightOffCommand(light);
+        ICommand tvOn = new TelevisionOnCommand(tv);
+        ICommand tvOff = new TelevisionOffCommand(tv);
+        ICommand acOn = new AirConditionerOnCommand(ac);
+        ICommand acOff = new AirConditionerOffCommand(ac);
+        RemoteControl remote = new RemoteControl();
+        System.out.println("Управление светом:");
+        remote.setCommands(lightOn, lightOff);
+        remote.pressOnButton();
+        remote.pressOffButton();
+        remote.pressUndoButton();
+        System.out.println("\nУправление телевизором:");
+        remote.setCommands(tvOn, tvOff);
+        remote.pressOnButton();
+        remote.pressOffButton();
+        System.out.println("\nУправление кондиционером:");
+        remote.setCommands(acOn, acOff);
+        remote.pressOnButton();
+        remote.pressOffButton();
+        System.out.println("\n=== Шаблонный метод ===");
+        Beverage tea = new Tea();
+        System.out.println("Приготовление чая:");
+        tea.prepareRecipe();
+        Beverage coffee = new Coffee();
+        System.out.println("\nПриготовление кофе:");
+        coffee.prepareRecipe();
+        Beverage chocolate = new HotChocolate();
+        System.out.println("\nПриготовление горячего шоколада:");
+        chocolate.prepareRecipe();
+        System.out.println("\n=== Посредник ===");
+        ChatMediator mediator = new ChatMediator();
+        User user1 = new User(mediator, "Алиса");
+        User user2 = new User(mediator, "Боб");
+        User user3 = new User(mediator, "Чарли");
+        mediator.registerColleague(user1);
+        mediator.registerColleague(user2);
+        mediator.registerColleague(user3);
+        user1.send("Привет всем!");
+        user2.send("Привет, Алиса!");
+        user3.send("Всем привет!");
+    }
+}
