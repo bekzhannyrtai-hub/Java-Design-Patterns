@@ -1,0 +1,255 @@
+import java.util.*;
+
+interface ICommand {
+    void execute();
+    void undo();
+}
+
+class Light {
+    void on() { System.out.println("Свет включен"); }
+    void off() { System.out.println("Свет выключен"); }
+}
+
+class Television {
+    void on() { System.out.println("Телевизор включен"); }
+    void off() { System.out.println("Телевизор выключен"); }
+}
+
+class AirConditioner {
+    void on() { System.out.println("Кондиционер включен"); }
+    void off() { System.out.println("Кондиционер выключен"); }
+}
+
+class MusicPlayer {
+    void on() { System.out.println("Музыкальный плеер включен"); }
+    void off() { System.out.println("Музыкальный плеер выключен"); }
+}
+
+class LightOnCommand implements ICommand {
+    private Light light;
+    LightOnCommand(Light light) { this.light = light; }
+    public void execute() { light.on(); }
+    public void undo() { light.off(); }
+}
+
+class LightOffCommand implements ICommand {
+    private Light light;
+    LightOffCommand(Light light) { this.light = light; }
+    public void execute() { light.off(); }
+    public void undo() { light.on(); }
+}
+
+class TelevisionOnCommand implements ICommand {
+    private Television tv;
+    TelevisionOnCommand(Television tv) { this.tv = tv; }
+    public void execute() { tv.on(); }
+    public void undo() { tv.off(); }
+}
+
+class TelevisionOffCommand implements ICommand {
+    private Television tv;
+    TelevisionOffCommand(Television tv) { this.tv = tv; }
+    public void execute() { tv.off(); }
+    public void undo() { tv.on(); }
+}
+
+class AirConditionerOnCommand implements ICommand {
+    private AirConditioner ac;
+    AirConditionerOnCommand(AirConditioner ac) { this.ac = ac; }
+    public void execute() { ac.on(); }
+    public void undo() { ac.off(); }
+}
+
+class AirConditionerOffCommand implements ICommand {
+    private AirConditioner ac;
+    AirConditionerOffCommand(AirConditioner ac) { this.ac = ac; }
+    public void execute() { ac.off(); }
+    public void undo() { ac.on(); }
+}
+
+class MusicOnCommand implements ICommand {
+    private MusicPlayer mp;
+    MusicOnCommand(MusicPlayer mp) { this.mp = mp; }
+    public void execute() { mp.on(); }
+    public void undo() { mp.off(); }
+}
+
+class MusicOffCommand implements ICommand {
+    private MusicPlayer mp;
+    MusicOffCommand(MusicPlayer mp) { this.mp = mp; }
+    public void execute() { mp.off(); }
+    public void undo() { mp.on(); }
+}
+
+class MacroCommand implements ICommand {
+    private List<ICommand> commands;
+    MacroCommand(List<ICommand> commands) { this.commands = commands; }
+    public void execute() { for (ICommand c : commands) c.execute(); }
+    public void undo() { for (ICommand c : commands) c.undo(); }
+}
+
+class RemoteControl {
+    private Map<Integer, ICommand> onCommands = new HashMap<>();
+    private Map<Integer, ICommand> offCommands = new HashMap<>();
+    private Stack<ICommand> history = new Stack<>();
+    private Stack<ICommand> redoStack = new Stack<>();
+    void setCommand(int slot, ICommand on, ICommand off) {
+        onCommands.put(slot, on);
+        offCommands.put(slot, off);
+    }
+    void pressOn(int slot) {
+        ICommand cmd = onCommands.get(slot);
+        if (cmd != null) { cmd.execute(); history.push(cmd); redoStack.clear(); }
+        else System.out.println("Нет команды");
+    }
+    void pressOff(int slot) {
+        ICommand cmd = offCommands.get(slot);
+        if (cmd != null) { cmd.execute(); history.push(cmd); redoStack.clear(); }
+        else System.out.println("Нет команды");
+    }
+    void undo() {
+        if (!history.isEmpty()) {
+            ICommand cmd = history.pop();
+            cmd.undo();
+            redoStack.push(cmd);
+        } else System.out.println("Нечего отменять");
+    }
+    void redo() {
+        if (!redoStack.isEmpty()) {
+            ICommand cmd = redoStack.pop();
+            cmd.execute();
+            history.push(cmd);
+        } else System.out.println("Нечего повторять");
+    }
+}
+
+abstract class ReportGenerator {
+    public final void generateReport() {
+        collectData();
+        formatData();
+        exportReport();
+        if (customerWantsSave()) saveReport();
+    }
+    protected abstract void collectData();
+    protected abstract void formatData();
+    protected abstract void exportReport();
+    protected boolean customerWantsSave() { return true; }
+    protected void saveReport() { System.out.println("Отчет сохранен."); }
+}
+
+class PdfReport extends ReportGenerator {
+    protected void collectData() { System.out.println("Сбор данных для PDF"); }
+    protected void formatData() { System.out.println("Форматирование PDF"); }
+    protected void exportReport() { System.out.println("Экспорт PDF"); }
+}
+
+class ExcelReport extends ReportGenerator {
+    protected void collectData() { System.out.println("Сбор данных для Excel"); }
+    protected void formatData() { System.out.println("Форматирование Excel"); }
+    protected void exportReport() { System.out.println("Экспорт Excel"); }
+    protected void saveReport() { System.out.println("Excel сохранен."); }
+}
+
+class HtmlReport extends ReportGenerator {
+    protected void collectData() { System.out.println("Сбор данных для HTML"); }
+    protected void formatData() { System.out.println("Форматирование HTML"); }
+    protected void exportReport() { System.out.println("Генерация HTML страницы"); }
+}
+
+class CsvReport extends ReportGenerator {
+    protected void collectData() { System.out.println("Сбор данных для CSV"); }
+    protected void formatData() { System.out.println("Форматирование CSV"); }
+    protected void exportReport() { System.out.println("Создание CSV файла"); }
+}
+
+interface IMediator {
+    void sendMessage(String msg, IUser user);
+    void addUser(IUser user);
+    void removeUser(IUser user);
+}
+
+interface IUser {
+    void send(String msg);
+    void receive(String msg);
+    String getName();
+}
+
+class ChatMediator implements IMediator {
+    private List<IUser> users = new ArrayList<>();
+    public void addUser(IUser user) { users.add(user); }
+    public void removeUser(IUser user) { users.remove(user); }
+    public void sendMessage(String msg, IUser sender) {
+        for (IUser u : users) {
+            if (u != sender) u.receive(sender.getName() + ": " + msg);
+        }
+    }
+}
+
+class User implements IUser {
+    private IMediator mediator;
+    private String name;
+    User(IMediator m, String n) { mediator = m; name = n; }
+    public void send(String msg) {
+        System.out.println(name + " отправил: " + msg);
+        mediator.sendMessage(msg, this);
+    }
+    public void receive(String msg) { System.out.println(name + " получил -> " + msg); }
+    public String getName() { return name; }
+}
+
+class ChannelMediator extends ChatMediator {
+    private Map<String, List<IUser>> channels = new HashMap<>();
+    void addUserToChannel(String channel, IUser user) {
+        channels.computeIfAbsent(channel, k -> new ArrayList<>()).add(user);
+        System.out.println(user.getName() + " подключился к " + channel);
+    }
+    void sendToChannel(String channel, String msg, IUser sender) {
+        List<IUser> list = channels.get(channel);
+        if (list == null) { System.out.println("Канал не найден."); return; }
+        for (IUser u : list) {
+            if (u != sender) u.receive("[" + channel + "] " + sender.getName() + ": " + msg);
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Light light = new Light();
+        Television tv = new Television();
+        AirConditioner ac = new AirConditioner();
+        MusicPlayer mp = new MusicPlayer();
+        RemoteControl rc = new RemoteControl();
+        rc.setCommand(1, new LightOnCommand(light), new LightOffCommand(light));
+        rc.setCommand(2, new TelevisionOnCommand(tv), new TelevisionOffCommand(tv));
+        rc.setCommand(3, new AirConditionerOnCommand(ac), new AirConditionerOffCommand(ac));
+        rc.setCommand(4, new MusicOnCommand(mp), new MusicOffCommand(mp));
+        List<ICommand> morning = Arrays.asList(new LightOnCommand(light), new TelevisionOnCommand(tv), new MusicOnCommand(mp));
+        MacroCommand morningMacro = new MacroCommand(morning);
+        rc.setCommand(5, morningMacro, new MacroCommand(Arrays.asList(new LightOffCommand(light), new TelevisionOffCommand(tv), new MusicOffCommand(mp))));
+        System.out.println("=== Command ===");
+        rc.pressOn(1);
+        rc.pressOff(1);
+        rc.pressOn(5);
+        rc.undo();
+        rc.redo();
+        System.out.println("\n=== Template Method ===");
+        ReportGenerator pdf = new PdfReport();
+        ReportGenerator excel = new ExcelReport();
+        ReportGenerator html = new HtmlReport();
+        ReportGenerator csv = new CsvReport();
+        pdf.generateReport();
+        excel.generateReport();
+        html.generateReport();
+        csv.generateReport();
+        System.out.println("\n=== Mediator ===");
+        ChannelMediator mediator = new ChannelMediator();
+        User a = new User(mediator, "Алиса");
+        User b = new User(mediator, "Боб");
+        User c = new User(mediator, "Чарли");
+        mediator.addUserToChannel("Общий", a);
+        mediator.addUserToChannel("Общий", b);
+        mediator.addUserToChannel("Общий", c);
+        a.send("Привет всем!");
+        mediator.sendToChannel("Общий", "Как дела?", b);
+    }
+}
