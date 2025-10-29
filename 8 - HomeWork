@@ -1,0 +1,133 @@
+interface Drink {
+    String describe();
+    double price();
+}
+
+class Espresso implements Drink {
+    public String describe() { return "Espresso"; }
+    public double price() { return 300.0; }
+}
+
+class Tea implements Drink {
+    public String describe() { return "Tea"; }
+    public double price() { return 200.0; }
+}
+
+class Latte implements Drink {
+    public String describe() { return "Latte"; }
+    public double price() { return 450.0; }
+}
+
+class Mocha implements Drink {
+    public String describe() { return "Mocha"; }
+    public double price() { return 500.0; }
+}
+
+abstract class DrinkDecorator implements Drink {
+    protected Drink base;
+    protected DrinkDecorator(Drink b) { this.base = b; }
+    public String describe() { return base.describe(); }
+    public double price() { return base.price(); }
+}
+
+class Milk extends DrinkDecorator {
+    public Milk(Drink b) { super(b); }
+    public String describe() { return base.describe() + ", Milk"; }
+    public double price() { return base.price() + 50.0; }
+}
+
+class Sugar extends DrinkDecorator {
+    public Sugar(Drink b) { super(b); }
+    public String describe() { return base.describe() + ", Sugar"; }
+    public double price() { return base.price() + 10.0; }
+}
+
+class WhippedCream extends DrinkDecorator {
+    public WhippedCream(Drink b) { super(b); }
+    public String describe() { return base.describe() + ", WhippedCream"; }
+    public double price() { return base.price() + 80.0; }
+}
+
+class Syrup extends DrinkDecorator {
+    public Syrup(Drink b) { super(b); }
+    public String describe() { return base.describe() + ", Syrup"; }
+    public double price() { return base.price() + 60.0; }
+}
+
+class Caramel extends DrinkDecorator {
+    public Caramel(Drink b) { super(b); }
+    public String describe() { return base.describe() + ", Caramel"; }
+    public double price() { return base.price() + 70.0; }
+}
+
+interface PaymentHandler {
+    void handlePayment(double amount);
+}
+
+class PayPalProcessor implements PaymentHandler {
+    public void handlePayment(double amount) {
+        System.out.println("PayPal: processing payment of " + String.format("%.2f", amount) + " KZT");
+    }
+}
+
+class StripeService {
+    public boolean makeTransaction(double totalAmount) {
+        System.out.println("StripeService: transaction executed for " + String.format("%.2f", totalAmount) + " KZT");
+        return true;
+    }
+}
+
+class StripeAdapter implements PaymentHandler {
+    private StripeService svc;
+    public StripeAdapter(StripeService s) { this.svc = s; }
+    public void handlePayment(double amount) {
+        svc.makeTransaction(amount);
+    }
+}
+
+class FastPayService {
+    public String executePayment(double amount, String token) {
+        String receipt = "FP-" + System.currentTimeMillis();
+        System.out.println("FastPayService: paid " + String.format("%.2f", amount) + " KZT, token: " + token + ", receipt: " + receipt);
+        return receipt;
+    }
+}
+
+class FastPayAdapter implements PaymentHandler {
+    private FastPayService gateway;
+    public FastPayAdapter(FastPayService g) { this.gateway = g; }
+    public void handlePayment(double amount) {
+        gateway.executePayment(amount, "token_xyz");
+    }
+}
+
+
+public class Main {
+    public static void main(String[] args) {
+        Drink order1 = new Espresso();
+        order1 = new Milk(order1);
+        order1 = new Sugar(order1);
+        System.out.println(order1.describe() + " -> " + String.format("%.2f", order1.price()) + " KZT");
+
+        Drink order2 = new Mocha();
+        order2 = new WhippedCream(order2);
+        order2 = new Syrup(order2);
+        order2 = new Caramel(order2);
+        System.out.println(order2.describe() + " -> " + String.format("%.2f", order2.price()) + " KZT");
+
+        Drink order3 = new Latte();
+        order3 = new Milk(order3);
+        order3 = new Milk(order3);
+        System.out.println(order3.describe() + " -> " + String.format("%.2f", order3.price()) + " KZT");
+
+        System.out.println();
+
+        PaymentHandler paypal = new PayPalProcessor();
+        PaymentHandler stripe = new StripeAdapter(new StripeService());
+        PaymentHandler fastpay = new FastPayAdapter(new FastPayService());
+
+        paypal.handlePayment(1200.50);
+        stripe.handlePayment(750.00);
+        fastpay.handlePayment(3400.75);
+    }
+}
