@@ -1,0 +1,181 @@
+import java.util.*;
+
+interface IReport {
+    String generate();
+}
+
+class SalesReport implements IReport {
+    public String generate() {
+        return "Sales Report: Order1 - $200, Order2 - $300, Order3 - $150";
+    }
+}
+
+class UserReport implements IReport {
+    public String generate() {
+        return "User Report: User1 - Active, User2 - Inactive, User3 - Active";
+    }
+}
+
+abstract class ReportDecorator implements IReport {
+    protected IReport report;
+    public ReportDecorator(IReport report) {
+        this.report = report;
+    }
+}
+
+class DateFilterDecorator extends ReportDecorator {
+    private String startDate, endDate;
+    public DateFilterDecorator(IReport report, String startDate, String endDate) {
+        super(report);
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+    public String generate() {
+        return report.generate() + "\nDate filtered: " + startDate + " to " + endDate;
+    }
+}
+
+class SortingDecorator extends ReportDecorator {
+    private String criteria;
+    public SortingDecorator(IReport report, String criteria) {
+        super(report);
+        this.criteria = criteria;
+    }
+    public String generate() {
+        return report.generate() + "\nSorted by: " + criteria;
+    }
+}
+
+class CsvExportDecorator extends ReportDecorator {
+    public CsvExportDecorator(IReport report) {
+        super(report);
+    }
+    public String generate() {
+        return report.generate() + "\nExported as: CSV";
+    }
+}
+
+class PdfExportDecorator extends ReportDecorator {
+    public PdfExportDecorator(IReport report) {
+        super(report);
+    }
+    public String generate() {
+        return report.generate() + "\nExported as: PDF";
+    }
+}
+
+public class DecoratorDemo {
+    public static void main(String[] args) {
+        IReport report = new SalesReport();
+        report = new DateFilterDecorator(report, "2025-01-01", "2025-12-31");
+        report = new SortingDecorator(report, "Amount");
+        report = new CsvExportDecorator(report);
+        System.out.println(report.generate());
+
+        IReport userReport = new UserReport();
+        userReport = new SortingDecorator(userReport, "Status");
+        userReport = new PdfExportDecorator(userReport);
+        System.out.println("\n" + userReport.generate());
+    }
+}
+
+
+interface IInternalDeliveryService {
+    void deliverOrder(String orderId);
+    String getDeliveryStatus(String orderId);
+}
+
+class InternalDeliveryService implements IInternalDeliveryService {
+    private Map<String, String> status = new HashMap<>();
+    public void deliverOrder(String orderId) {
+        status.put(orderId, "Delivered via Internal Service");
+    }
+    public String getDeliveryStatus(String orderId) {
+        return status.getOrDefault(orderId, "Not Found");
+    }
+}
+
+class ExternalLogisticsServiceA {
+    public void shipItem(int itemId) {
+        System.out.println("Shipping item " + itemId + " via ServiceA");
+    }
+    public String trackShipment(int shipmentId) {
+        return "ServiceA shipment " + shipmentId + " in transit";
+    }
+}
+
+class ExternalLogisticsServiceB {
+    public void sendPackage(String packageInfo) {
+        System.out.println("Sending package: " + packageInfo + " via ServiceB");
+    }
+    public String checkPackageStatus(String trackingCode) {
+        return "ServiceB tracking " + trackingCode + " delivered";
+    }
+}
+
+class LogisticsAdapterA implements IInternalDeliveryService {
+    private ExternalLogisticsServiceA serviceA = new ExternalLogisticsServiceA();
+    public void deliverOrder(String orderId) {
+        serviceA.shipItem(orderId.hashCode());
+    }
+    public String getDeliveryStatus(String orderId) {
+        return serviceA.trackShipment(orderId.hashCode());
+    }
+}
+
+class LogisticsAdapterB implements IInternalDeliveryService {
+    private ExternalLogisticsServiceB serviceB = new ExternalLogisticsServiceB();
+    public void deliverOrder(String orderId) {
+        serviceB.sendPackage(orderId);
+    }
+    public String getDeliveryStatus(String orderId) {
+        return serviceB.checkPackageStatus(orderId);
+    }
+}
+
+class ExternalLogisticsServiceC {
+    public void startDelivery(String code) {
+        System.out.println("Starting delivery for " + code + " via ServiceC");
+    }
+    public String status(String code) {
+        return "ServiceC " + code + " on the way";
+    }
+}
+
+class LogisticsAdapterC implements IInternalDeliveryService {
+    private ExternalLogisticsServiceC serviceC = new ExternalLogisticsServiceC();
+    public void deliverOrder(String orderId) {
+        serviceC.startDelivery(orderId);
+    }
+    public String getDeliveryStatus(String orderId) {
+        return serviceC.status(orderId);
+    }
+}
+
+class DeliveryServiceFactory {
+    public static IInternalDeliveryService getService(String type) {
+        switch (type.toLowerCase()) {
+            case "internal": return new InternalDeliveryService();
+            case "a": return new LogisticsAdapterA();
+            case "b": return new LogisticsAdapterB();
+            case "c": return new LogisticsAdapterC();
+            default: throw new IllegalArgumentException("Unknown service type");
+        }
+    }
+}
+
+class AdapterDemo {
+    public static void main(String[] args) {
+        IInternalDeliveryService serviceA = DeliveryServiceFactory.getService("a");
+        serviceA.deliverOrder("ORD123");
+        System.out.println(serviceA.getDeliveryStatus("ORD123"));
+
+        IInternalDeliveryService serviceB = DeliveryServiceFactory.getService("b");
+        serviceB.deliverOrder("PKG777");
+        System.out.println(serviceB.getDeliveryStatus("PKG777"));
+
+        IInternalDeliveryService serviceC = DeliveryServiceFactory.getService("c");
+        serviceC.deliverOrder("DLV999");
+        System.out.println(serviceC.getDeliveryStatus("DLV999"));
+    }
+}
