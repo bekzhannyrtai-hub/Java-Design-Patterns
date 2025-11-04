@@ -1,0 +1,162 @@
+interface Drink {
+    double getPrice();
+    String getTitle();
+}
+
+class Coffee implements Drink {
+    public double getPrice() {
+        return 50.0;
+    }
+    public String getTitle() {
+        return "Coffee";
+    }
+}
+
+abstract class DrinkAddon implements Drink {
+    protected Drink drink;
+    public DrinkAddon(Drink d) {
+        this.drink = d;
+    }
+    public double getPrice() {
+        return drink.getPrice();
+    }
+    public String getTitle() {
+        return drink.getTitle();
+    }
+}
+
+class MilkAdd extends DrinkAddon {
+    public MilkAdd(Drink d) {
+        super(d);
+    }
+    public double getPrice() {
+        return super.getPrice() + 10.0;
+    }
+    public String getTitle() {
+        return super.getTitle() + ", Milk";
+    }
+}
+
+class SugarAdd extends DrinkAddon {
+    public SugarAdd(Drink d) {
+        super(d);
+    }
+    public double getPrice() {
+        return super.getPrice() + 5.0;
+    }
+    public String getTitle() {
+        return super.getTitle() + ", Sugar";
+    }
+}
+
+class ChocolateAdd extends DrinkAddon {
+    public ChocolateAdd(Drink d) {
+        super(d);
+    }
+    public double getPrice() {
+        return super.getPrice() + 15.0;
+    }
+    public String getTitle() {
+        return super.getTitle() + ", Chocolate";
+    }
+}
+
+class VanillaAdd extends DrinkAddon {
+    public VanillaAdd(Drink d) {
+        super(d);
+    }
+    public double getPrice() {
+        return super.getPrice() + 8.0;
+    }
+    public String getTitle() {
+        return super.getTitle() + ", Vanilla";
+    }
+}
+
+public class Decorator {
+    public static void main(String[] args) {
+        Drink order = new Coffee();
+        System.out.println(order.getTitle() + " : " + order.getPrice());
+
+        order = new MilkAdd(order);
+        order = new SugarAdd(order);
+        order = new ChocolateAdd(order);
+        order = new VanillaAdd(order);
+
+        System.out.println(order.getTitle() + " : " + order.getPrice());
+    }
+}
+
+interface Payment {
+    void pay(double amount);
+    void refund(double amount);
+}
+
+class LocalPayment implements Payment {
+    public void pay(double amount) {
+        System.out.println("Processing " + amount + " via internal system");
+    }
+    public void refund(double amount) {
+        System.out.println("Refunding " + amount + " via internal system");
+    }
+}
+
+class ExtSystemA {
+    public void makePay(double amount) {
+        System.out.println("Making payment " + amount + " via External A");
+    }
+    public void makeBack(double amount) {
+        System.out.println("Making refund " + amount + " via External A");
+    }
+}
+
+class ExtSystemB {
+    public void sendPay(double amount) {
+        System.out.println("Sending payment " + amount + " via External B");
+    }
+    public void processBack(double amount) {
+        System.out.println("Processing refund " + amount + " via External B");
+    }
+}
+
+class AdapterA implements Payment {
+    private ExtSystemA systemA;
+    public AdapterA(ExtSystemA s) {
+        this.systemA = s;
+    }
+    public void pay(double amount) {
+        systemA.makePay(amount);
+    }
+    public void refund(double amount) {
+        systemA.makeBack(amount);
+    }
+}
+
+class AdapterB implements Payment {
+    private ExtSystemB systemB;
+    public AdapterB(ExtSystemB s) {
+        this.systemB = s;
+    }
+    public void pay(double amount) {
+        systemB.sendPay(amount);
+    }
+    public void refund(double amount) {
+        systemB.processBack(amount);
+    }
+}
+
+public class Adapter {
+    public static void main(String[] args) {
+        Payment local = new LocalPayment();
+        local.pay(100);
+        local.refund(50);
+
+        Payment payA = new AdapterA(new ExtSystemA());
+        payA.pay(200);
+        payA.refund(80);
+
+        Payment payB = new AdapterB(new ExtSystemB());
+        payB.pay(300);
+        payB.refund(150);
+    }
+}
