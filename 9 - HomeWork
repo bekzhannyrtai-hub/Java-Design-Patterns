@@ -1,0 +1,258 @@
+import java.util.ArrayList;
+import java.util.List;
+
+class Television {
+    public void turnOn() {
+        System.out.println("Телевизор включен");
+    }
+    
+    public void turnOff() {
+        System.out.println("Телевизор выключен");
+    }
+    
+    public void setChannel(int channel) {
+        System.out.println("Установлен канал: " + channel);
+    }
+    
+    public void setAudioInput() {
+        System.out.println("Аудиовход телевизора установлен");
+    }
+}
+
+class SoundSystem {
+    public void turnOn() {
+        System.out.println("Аудиосистема включена");
+    }
+    
+    public void turnOff() {
+        System.out.println("Аудиосистема выключена");
+    }
+    
+    public void setVolume(int level) {
+        System.out.println("Громкость установлена на: " + level);
+    }
+}
+
+class BluRayPlayer {
+    public void play() {
+        System.out.println("Blu-Ray плеер воспроизводит");
+    }
+    
+    public void pause() {
+        System.out.println("Blu-Ray плеер на паузе");
+    }
+    
+    public void stop() {
+        System.out.println("Blu-Ray плеер остановлен");
+    }
+}
+
+class GamingDevice {
+    public void turnOn() {
+        System.out.println("Игровая консоль включена");
+    }
+    
+    public void startGame() {
+        System.out.println("Игра запущена");
+    }
+}
+
+class MediaCenterFacade {
+    private Television tv;
+    private SoundSystem audio;
+    private BluRayPlayer player;
+    private GamingDevice console;
+    
+    public MediaCenterFacade() {
+        this.tv = new Television();
+        this.audio = new SoundSystem();
+        this.player = new BluRayPlayer();
+        this.console = new GamingDevice();
+    }
+    
+    public void startMovieMode() {
+        System.out.println(" Режим просмотра фильма ");
+        tv.turnOn();
+        audio.turnOn();
+        audio.setVolume(20);
+        player.play();
+        tv.setChannel(1);
+    }
+    
+    public void stopMovieMode() {
+        System.out.println(" Выключение режима фильма ");
+        player.stop();
+        audio.turnOff();
+        tv.turnOff();
+    }
+    
+    public void startGamingSession() {
+        System.out.println(" Игровой режим ");
+        tv.turnOn();
+        console.turnOn();
+        console.startGame();
+        audio.turnOn();
+        audio.setVolume(25);
+    }
+    
+    public void startMusicSession() {
+        System.out.println("Музыкальный режим ");
+        tv.turnOn();
+        tv.setAudioInput();
+        audio.turnOn();
+        audio.setVolume(15);
+    }
+    
+    public void shutdownAll() {
+        System.out.println(" Полное выключение ");
+        player.stop();
+        console.turnOn();
+        audio.turnOff();
+        tv.turnOff();
+    }
+    
+    public void adjustVolume(int level) {
+        audio.setVolume(level);
+    }
+}
+
+
+abstract class FileSystemElement {
+    protected String elementName;
+    
+    public FileSystemElement(String elementName) {
+        this.elementName = elementName;
+    }
+    
+    public abstract void showDetails();
+    public abstract long calculateSize();
+    public String getElementName() {
+        return elementName;
+    }
+}
+
+class DataFile extends FileSystemElement {
+    private long fileSize;
+    
+    public DataFile(String elementName, long fileSize) {
+        super(elementName);
+        this.fileSize = fileSize;
+    }
+    
+    @Override
+    public void showDetails() {
+        System.out.println("Файл: " + elementName + " [" + fileSize + " байт]");
+    }
+    
+    @Override
+    public long calculateSize() {
+        return fileSize;
+    }
+}
+
+class DataFolder extends FileSystemElement {
+    private List<FileSystemElement> elements = new ArrayList<>();
+    
+    public DataFolder(String elementName) {
+        super(elementName);
+    }
+    
+    public void addElement(FileSystemElement element) {
+        if (!elements.contains(element)) {
+            elements.add(element);
+            System.out.println("Добавлен: " + element.getElementName() + " в " + elementName);
+        } else {
+            System.out.println("Элемент уже существует: " + element.getElementName());
+        }
+    }
+    
+    public void removeElement(FileSystemElement element) {
+        if (elements.contains(element)) {
+            elements.remove(element);
+            System.out.println("Удален: " + element.getElementName() + " из " + elementName);
+        } else {
+            System.out.println("Элемент не найден: " + element.getElementName());
+        }
+    }
+    
+    @Override
+    public void showDetails() {
+        System.out.println("Папка: " + elementName + " [" + calculateSize() + " байт]");
+        for (FileSystemElement element : elements) {
+            element.showDetails();
+        }
+    }
+    
+    @Override
+    public long calculateSize() {
+        long totalSize = 0;
+        for (FileSystemElement element : elements) {
+            totalSize += element.calculateSize();
+        }
+        return totalSize;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("ТЕСТ ФАСАДА");
+        
+        MediaCenterFacade mediaCenter = new MediaCenterFacade();
+        
+        mediaCenter.startMovieMode();
+        System.out.println();
+        
+        mediaCenter.adjustVolume(30);
+        System.out.println();
+        
+        mediaCenter.stopMovieMode();
+        System.out.println();
+        
+        mediaCenter.startGamingSession();
+        System.out.println();
+        
+        mediaCenter.startMusicSession();
+        System.out.println();
+        
+        mediaCenter.shutdownAll();
+        System.out.println();
+        
+        System.out.println(" ТЕСТ КОМПОНОВЩИКА ");
+        
+        DataFile doc1 = new DataFile("report.docx", 1500);
+        DataFile img1 = new DataFile("photo.jpg", 3500);
+        DataFile video1 = new DataFile("movie.mp4", 15000);
+        DataFile music1 = new DataFile("song.mp3", 8000);
+        DataFile text1 = new DataFile("notes.txt", 500);
+        
+        DataFolder mainFolder = new DataFolder("Основная папка");
+        DataFolder documents = new DataFolder("Документы");
+        DataFolder media = new DataFolder("Медиа");
+        DataFolder images = new DataFolder("Изображения");
+        
+    
+        documents.addElement(doc1);
+        documents.addElement(text1);
+        
+        images.addElement(img1);
+        
+        media.addElement(video1);
+        media.addElement(music1);
+        media.addElement(images);
+        
+        mainFolder.addElement(documents);
+        mainFolder.addElement(media);
+        
+    
+        System.out.println("Структура файловой системы:");
+        mainFolder.showDetails();
+        
+        System.out.println("Общий размер: " + mainFolder.calculateSize() + " байт");
+        
+        System.out.println("Тест удаления");
+        media.removeElement(music1);
+        System.out.println("Обновленная структура:");
+        mainFolder.showDetails();
+        System.out.println("Новый общий размер: " + mainFolder.calculateSize() + " байт");
+    }
+}
