@@ -1,0 +1,220 @@
+abstract class User {
+    protected String name;
+    protected String email;
+
+    public User(String name, String email) {
+        this.name = name;
+        this.email = email;
+    }
+}
+
+
+import java.util.ArrayList;
+import java.util.List;
+
+class Student extends User {
+    private String recordBookNumber;
+    private List<Course> courses = new ArrayList<>();
+
+    public Student(String name, String email, String recordBookNumber) {
+        super(name, email);
+        this.recordBookNumber = recordBookNumber;
+    }
+
+    public void registerCourse(Course course) {
+        courses.add(course);
+        course.addStudent(this);
+    }
+
+    public void viewGrades() {
+        System.out.println("Оценки студента:");
+        for (Course c : courses) {
+            System.out.println("Курс: " + c.getName());
+        }
+    }
+}
+
+
+
+class Teacher extends User {
+    private String position;
+    private List<Course> courseList = new ArrayList<>();
+
+    public Teacher(String name, String email, String position) {
+        super(name, email);
+        this.position = position;
+    }
+
+    public void teach() {
+        System.out.println(name + " проводит занятие");
+    }
+
+    public void setGrade(Exam exam, Student student, int value) {
+        exam.addGrade(new Grade(student, value));
+    }
+}
+
+
+class University {
+    private String name;
+    private String address;
+    private List<Faculty> faculties = new ArrayList<>();
+
+    public University(String name, String address) {
+        this.name = name;
+        this.address = address;
+    }
+
+    public void addFaculty(Faculty faculty) {
+        faculties.add(faculty);
+    }
+
+    public void removeFaculty(Faculty faculty) {
+        faculties.remove(faculty);
+    }
+}
+
+
+class Faculty {
+    private String name;
+    private List<Department> departments = new ArrayList<>();
+
+    public Faculty(String name) {
+        this.name = name;
+    }
+
+    public void addDepartment(Department d) {
+        departments.add(d);
+    }
+
+    public void removeDepartment(Department d) {
+        departments.remove(d);
+    }
+}
+
+
+class Department {
+    private String name;
+    private List<Teacher> teachers = new ArrayList<>();
+    private List<Course> courses = new ArrayList<>();
+
+    public Department(String name) {
+        this.name = name;
+    }
+
+    public void addTeacher(Teacher t) {
+        teachers.add(t);
+    }
+
+    public void addCourse(Course c) {
+        courses.add(c);
+    }
+}
+
+
+class Course {
+    private String name;
+    private Department department;
+    private List<Student> students = new ArrayList<>();
+    private List<Teacher> teachers = new ArrayList<>();
+    private Schedule schedule;
+
+    public Course(String name, Department department) {
+        this.name = name;
+        this.department = department;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void addStudent(Student s) {
+        students.add(s);
+    }
+
+    public void addTeacher(Teacher t) {
+        teachers.add(t);
+    }
+
+    public void setSchedule(Schedule s) {
+        this.schedule = s;
+    }
+}
+
+
+class Schedule {
+    private String date;
+    private String time;
+    private String room;
+
+    public Schedule(String date, String time, String room) {
+        this.date = date;
+        this.time = time;
+        this.room = room;
+    }
+
+    public void update(String newDate, String newTime) {
+        this.date = newDate;
+        this.time = newTime;
+    }
+}
+
+
+class Exam {
+    private Course course;
+    private String date;
+    private List<Grade> gradeList = new ArrayList<>();
+
+    public Exam(Course course, String date) {
+        this.course = course;
+        this.date = date;
+    }
+
+    public void addGrade(Grade grade) {
+        gradeList.add(grade);
+    }
+}
+
+
+class Grade {
+    private Student student;
+    private int value;
+
+    public Grade(Student student, int value) {
+        this.student = student;
+        this.value = value;
+    }
+}
+
+
+public class UniversitySystem {
+    public static void main(String[] args) {
+
+        University uni = new University("KazNITU", "Almaty");
+
+        Faculty faculty = new Faculty("IT Faculty");
+        uni.addFaculty(faculty);
+
+        Department department = new Department("Computer Science");
+        faculty.addDepartment(department);
+
+        Teacher teacher = new Teacher("Nurtai", "nurtai@mail.com", "Senior Lecturer");
+        department.addTeacher(teacher);
+
+        Course javaCourse = new Course("Java Programming", department);
+        department.addCourse(javaCourse);
+
+        javaCourse.addTeacher(teacher);
+
+        Student student = new Student("Bekzhan", "bek@mail.com", "12345");
+        student.registerCourse(javaCourse);
+
+        Schedule schedule = new Schedule("2025-05-10", "10:00", "A101");
+        javaCourse.setSchedule(schedule);
+
+        Exam exam = new Exam(javaCourse, "2025-06-01");
+        teacher.setGrade(exam, student, 95);
+
+        System.out.println("Готово!");
+    }
+}
