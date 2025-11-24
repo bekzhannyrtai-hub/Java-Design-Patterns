@@ -1,0 +1,309 @@
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
+enum AppointmentStatus { PLANNED, CANCELED, COMPLETED }
+enum PrescriptionStatus { ACTIVE, EXPIRED, ANNULLED }
+
+interface IUser {
+    int getId();
+    String getName();
+    void login();
+    void logout();
+    void updateProfile(Map<String, String> data);
+}
+
+abstract class MedicalStaff implements IUser {
+    protected int id;
+    protected String name;
+    protected String email;
+    protected String department;
+
+    public MedicalStaff(int id, String name, String email, String department) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.department = department;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public String getEmail() { return email; }
+
+    public void login() { System.out.println(name + " вошел в систему."); }
+    public void logout() { System.out.println(name + " вышел из системы."); }
+    public void updateProfile(Map<String, String> data) { System.out.println("Профиль обновлен."); }
+
+    public void viewPatientRecord(int patientId) { System.out.println(name + " просматривает карту пациента " + patientId); }
+}
+
+class Patient implements IUser {
+    private int id;
+    private String name;
+    private Date birthDate;
+    private String address;
+    private String medicalHistory;
+    private String email;
+
+    public Patient(int id, String name, Date birthDate, String address, String email) {
+        this.id = id;
+        this.name = name;
+        this.birthDate = birthDate;
+        this.address = address;
+        this.email = email;
+        this.medicalHistory = "Нет записей";
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public String getEmail() { return email; }
+
+    public void login() { System.out.println(name + " вошел в систему."); }
+    public void logout() { System.out.println(name + " вышел из системы."); }
+    public void updateProfile(Map<String, String> data) { System.out.println("Данные пациента обновлены."); }
+
+    public void bookAppointment() { System.out.println(name + " записался на прием."); }
+    public void viewHistory() { System.out.println(name + " просматривает свою историю."); }
+    public void updateData() { System.out.println("Обновить данные пациента."); }
+}
+
+class Schedule {
+    private int id;
+    private Doctor doctor;
+    private Map<Date, Boolean> slots;
+
+    public Schedule(int id, Doctor doctor) {
+        this.id = id;
+        this.doctor = doctor;
+        this.slots = new HashMap<>();
+    }
+
+    public void setAvailability(Date date, boolean available) {
+        slots.put(date, available);
+    }
+
+    public boolean getAvailability(Date date) {
+        return slots.getOrDefault(date, false);
+    }
+
+    public void blockSlot(Date date) {
+        slots.put(date, false);
+        System.out.println("Слот " + date + " заблокирован.");
+    }
+}
+
+class Doctor extends MedicalStaff {
+    private String specialization;
+    private Schedule schedule;
+    private String officeNumber;
+
+    public Doctor(int id, String name, String email, String specialization, String department, String officeNumber) {
+        super(id, name, email, department);
+        this.specialization = specialization;
+        this.officeNumber = officeNumber;
+        this.schedule = new Schedule(id, this);
+    }
+
+    public void appointTreatment() { System.out.println("Назначить лечение."); }
+
+    public Prescription issuePrescription(Patient patient, Drug drug, String dosage, Date expiryDate) {
+        System.out.println(name + " выписал рецепт для " + patient.getName());
+        return new Prescription(0, this, patient, drug, dosage, expiryDate);
+    }
+
+    public void updateSchedule() { System.out.println("Расписание врача обновлено."); }
+    public Schedule getSchedule() { return schedule; }
+}
+
+class Nurse extends MedicalStaff {
+    private String shift;
+
+    public Nurse(int id, String name, String email, String department, String shift) {
+        super(id, name, email, department);
+        this.shift = shift;
+    }
+
+    public void assistDoctor() { System.out.println(name + " ассистирует врачу."); }
+    public void administerMedication() { System.out.println(name + " выдает лекарство."); }
+}
+
+class Appointment {
+    private static final AtomicInteger ID_GENERATOR = new AtomicInteger(100);
+    private int id;
+    private Date dateTime;
+    private Patient patient;
+    private Doctor doctor;
+    private AppointmentStatus status;
+
+    public Appointment(Date dateTime, Patient patient, Doctor doctor) {
+        this.id = ID_GENERATOR.getAndIncrement();
+        this.dateTime = dateTime;
+        this.patient = patient;
+        this.doctor = doctor;
+        this.status = AppointmentStatus.PLANNED;
+    }
+
+    public void create() {
+        System.out.println("Запись " + id + " создана.");
+        doctor.getSchedule().blockSlot(dateTime);
+    }
+    public void cancel() { this.status = AppointmentStatus.CANCELED; System.out.println("Запись " + id + " отменена."); }
+    public void complete() { this.status = AppointmentStatus.COMPLETED; System.out.println("Запись " + id + " завершена."); }
+}
+
+class RecordEntry {
+    private Date dateTime;
+    private Doctor doctor;
+    private String diagnosis;
+    private String notes;
+    private Prescription prescription;
+
+    public RecordEntry(Date dateTime, Doctor doctor, String diagnosis, String notes, Prescription prescription) {
+        this.dateTime = dateTime;
+        this.doctor = doctor;
+        this.diagnosis = diagnosis;
+        this.notes = notes;
+        this.prescription = prescription;
+    }
+}
+
+class MedicalRecord {
+    private static final AtomicInteger ID_GENERATOR = new AtomicInteger(1000);
+    private int id;
+    private Patient patient;
+    private List<RecordEntry> recordEntries;
+
+    public MedicalRecord(Patient patient) {
+        this.id = ID_GENERATOR.getAndIncrement();
+        this.patient = patient;
+        this.recordEntries = new ArrayList<>();
+    }
+
+    public void addEntry(RecordEntry entry) {
+        recordEntries.add(entry);
+        System.out.println("Запись добавлена в карту пациента " + patient.getName());
+    }
+    public void updateDiagnosis(String diagnosis) { System.out.println("Диагноз обновлен: " + diagnosis); }
+    public void deleteEntry(int entryId) { System.out.println("Запись " + entryId + " удалена."); }
+}
+
+class Drug {
+    private int id;
+    private String name;
+    private String unitQuantity;
+    private Date expiryDate;
+
+    public Drug(int id, String name, String unitQuantity, Date expiryDate) {
+        this.id = id;
+        this.name = name;
+        this.unitQuantity = unitQuantity;
+        this.expiryDate = expiryDate;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public void order(int quantity) { DrugStockManager.getInstance().order(this.id, quantity); }
+}
+
+class Prescription {
+    private static final AtomicInteger ID_GENERATOR = new AtomicInteger(500);
+    private int id;
+    private Doctor doctor;
+    private Patient patient;
+    private Drug drug;
+    private String dosage;
+    private Date expiryDate;
+    private PrescriptionStatus status;
+
+    public Prescription(int id, Doctor doctor, Patient patient, Drug drug, String dosage, Date expiryDate) {
+        this.id = ID_GENERATOR.getAndIncrement();
+        this.doctor = doctor;
+        this.patient = patient;
+        this.drug = drug;
+        this.dosage = dosage;
+        this.expiryDate = expiryDate;
+        this.status = PrescriptionStatus.ACTIVE;
+    }
+
+    public Drug getDrug() { return drug; }
+
+    public void create() { System.out.println("Рецепт " + id + " создан."); }
+    public void update() { System.out.println("Рецепт " + id + " обновлен."); }
+    public void annul() { this.status = PrescriptionStatus.ANNULLED; System.out.println("Рецепт " + id + " аннулирован."); }
+}
+
+class DrugStockManager {
+    private static DrugStockManager instance;
+    private Map<Integer, Integer> stock;
+
+    private DrugStockManager() {
+        stock = new HashMap<>();
+        stock.put(1, 50);
+        stock.put(2, 100);
+    }
+
+    public static DrugStockManager getInstance() {
+        if (instance == null) {
+            instance = new DrugStockManager();
+        }
+        return instance;
+    }
+
+    public int getQuantity(int drugId) {
+        return stock.getOrDefault(drugId, 0);
+    }
+
+    public void updateStock(int drugId, int change) {
+        stock.merge(drugId, change, Integer::sum);
+    }
+
+    public boolean dispense(Prescription prescription, int quantity) {
+        int drugId = prescription.getDrug().getId();
+        if (getQuantity(drugId) >= quantity) {
+            updateStock(drugId, -quantity);
+            System.out.println("Выдано " + quantity + " " + prescription.getDrug().getName() + ". Остаток: " + getQuantity(drugId));
+            return true;
+        } else {
+            System.out.println("Ошибка: Недостаточно " + prescription.getDrug().getName() + " на складе.");
+            return false;
+        }
+    }
+
+    public void order(int drugId, int quantity) {
+        System.out.println("Создан заказ на поставку " + quantity + " единиц лекарства ID: " + drugId);
+    }
+}
+
+public class MedicalSystem {
+    public static void main(String[] args) {
+        DrugStockManager stock = DrugStockManager.getInstance();
+
+        Doctor ivanov = new Doctor(1, "Иванов П.С.", "ivanov@clinic.ru", "Терапевт", "Терапия", "205");
+        Patient petrov = new Patient(101, "Петров А.А.", new Date(), "ул. Ленина, 10", "petrov@mail.ru");
+        Drug analgin = new Drug(1, "Анальгин", "таблетка", new Date(System.currentTimeMillis() + 864000000));
+        
+        Date appointmentTime = new Date(System.currentTimeMillis() + 3600000);
+        Appointment appt = new Appointment(appointmentTime, petrov, ivanov);
+        appt.create();
+
+        MedicalRecord record = new MedicalRecord(petrov);
+
+        Prescription rx = ivanov.issuePrescription(petrov, analgin, "1 таб. * 3 раза в день", new Date(System.currentTimeMillis() + 86400000));
+        rx.create();
+
+        RecordEntry entry = new RecordEntry(new Date(), ivanov, "ОРВИ", "Легкая форма", rx);
+        record.addEntry(entry);
+        
+        System.out.println("\n--- Работа со складом ---");
+        System.out.println("Остаток Анальгина до выдачи: " + stock.getQuantity(analgin.getId()));
+        
+        stock.dispense(rx, 10);
+        
+        System.out.println("Остаток Анальгина после выдачи: " + stock.getQuantity(analgin.getId()));
+
+        analgin.order(100);
+    }
+}
