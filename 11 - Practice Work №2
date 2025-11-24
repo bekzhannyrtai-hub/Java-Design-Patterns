@@ -1,0 +1,122 @@
+public class User {
+    private int id;
+    private String name;
+    private String email;
+    private String password;
+
+    public User(int id, String name, String email, String password) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.password = password;
+    }
+
+    public int getId() { return id; }
+    public String getEmail() { return email; }
+    public String getPassword() { return password; }
+}
+
+public class Account {
+    private int userId;
+    private double balance;
+
+    public Account(int userId, double balance) {
+        this.userId = userId;
+        this.balance = balance;
+    }
+
+    public double getBalance() { return balance; }
+    public void deposit(double amount) { balance += amount; }
+    public boolean withdraw(double amount) {
+        if (balance >= amount) {
+            balance -= amount;
+            return true;
+        }
+        return false;
+    }
+}
+
+import java.util.Date;
+
+public class Transaction {
+    private String type;
+    private double amount;
+    private Date date;
+
+    public Transaction(String type, double amount) {
+        this.type = type;
+        this.amount = amount;
+        this.date = new Date();
+    }
+
+    @Override
+    public String toString() {
+        return type + ": " + amount + " (" + date + ")";
+    }
+}
+
+public class AuthService {
+
+    public boolean login(User user, String email, String password) {
+        return user.getEmail().equals(email) && user.getPassword().equals(password);
+    }
+}
+
+public class PaymentService {
+
+    public boolean transfer(Account from, Account to, double amount) {
+        if (from.withdraw(amount)) {
+            to.deposit(amount);
+            return true;
+        }
+        return false;
+    }
+}
+
+public class NotificationService {
+
+    public void send(String email, String message) {
+        System.out.println("Уведомление отправлено на " + email + ": " + message);
+    }
+}
+
+import java.util.HashMap;
+
+public class Database {
+    public static HashMap<Integer, User> users = new HashMap<>();
+    public static HashMap<Integer, Account> accounts = new HashMap<>();
+}
+
+
+public class BankSystem {
+
+    public static void main(String[] args) {
+
+        User user1 = new User(1, "Nurtai", "nurtai@mail.com", "1234");
+        Account acc1 = new Account(1, 50000);
+
+        User user2 = new User(2, "Bekzhan", "bek@mail.com", "5678");
+        Account acc2 = new Account(2, 3000);
+
+        Database.users.put(1, user1);
+        Database.users.put(2, user2);
+
+        Database.accounts.put(1, acc1);
+        Database.accounts.put(2, acc2);
+
+        AuthService auth = new AuthService();
+        PaymentService payment = new PaymentService();
+        NotificationService notify = new NotificationService();
+
+        if (auth.login(user1, "nurtai@mail.com", "1234")) {
+            System.out.println("Авторизация успешна!");
+
+            if (payment.transfer(acc1, acc2, 10000)) {
+                notify.send(user1.getEmail(), "Вы отправили 10000 тг");
+                notify.send(user2.getEmail(), "Вам поступило 10000 тг");
+            } else {
+                System.out.println("Недостаточно средств!");
+            }
+        }
+    }
+}
