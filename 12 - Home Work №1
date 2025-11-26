@@ -1,0 +1,141 @@
+class VacancyRequest {
+    String title;
+    String department;
+    int requiredExperienceYears;
+    String status = "DRAFT";
+
+    public VacancyRequest(String title, String department, int requiredExperienceYears) {
+        this.title = title;
+        this.department = department;
+        this.requiredExperienceYears = requiredExperienceYears;
+    }
+}
+
+class Applicant {
+    String name;
+    int yearsOfExperience;
+    boolean isInterviewPassed;
+    boolean isOfferAccepted;
+
+    public Applicant(String name, int yearsOfExperience) {
+        this.name = name;
+        this.yearsOfExperience = yearsOfExperience;
+    }
+}
+
+import java.util.Random;
+
+public class RecruitingSystem {
+
+    private static class HR_Dept {
+        private static final Random RANDOM = new Random();
+
+        public static boolean checkRequestCompliance(VacancyRequest request) {
+            return request.requiredExperienceYears >= 3; 
+        }
+
+        public static boolean conductPrimaryInterview(Applicant applicant) {
+            return RANDOM.nextDouble() < 0.8; 
+        }
+
+        public static boolean conductTechnicalInterview(Applicant applicant) {
+            return RANDOM.nextDouble() < 0.6; 
+        }
+    }
+
+    public void startRecruitmentProcess(VacancyRequest request, Applicant candidate) {
+        
+        System.out.println("--- 1. ПОДГОТОВИТЕЛЬНЫЙ ЭТАП ---");
+        System.out.println("1.1 Руководитель создает заявку на " + request.title);
+
+        if (HR_Dept.checkRequestCompliance(request)) {
+            request.status = "APPROVED";
+            System.out.println("1.2 Заявка утверждена HR-отделом.");
+            
+            stage2_CandidateSelection(request, candidate);
+
+        } else {
+            request.status = "REQUIRES_REVISION";
+            System.out.println("1.2 Заявка НЕ соответствует. Руководитель получает уведомление о доработке.");
+        }
+    }
+
+    private void stage2_CandidateSelection(VacancyRequest approvedRequest, Applicant candidate) {
+        System.out.println("\n--- 2. ЭТАП ОТБОРА КАНДИДАТОВ ---");
+        
+        System.out.println("2.1 [ПАРАЛЛЕЛЬНО]: Вакансия опубликована и Кандидат " + candidate.name + " подал заявку.");
+        
+        if (candidate.yearsOfExperience >= approvedRequest.requiredExperienceYears) {
+            System.out.println("2.2 Анкета подходит. Кандидат приглашен на собеседование.");
+            
+            stage3_Interview(candidate);
+
+        } else {
+            System.out.println("2.2 Анкета отклонена. Кандидат получает уведомление об отказе.");
+        }
+    }
+
+    private void stage3_Interview(Applicant candidate) {
+        System.out.println("\n--- 3. ЭТАП СОБЕСЕДОВАНИЯ ---");
+        
+        boolean hrSuccess = HR_Dept.conductPrimaryInterview(candidate);
+        System.out.println("3.1 HR-интервью: " + (hrSuccess ? "Успешно" : "Провалено"));
+
+        boolean techSuccess = false;
+        if (hrSuccess) {
+            techSuccess = HR_Dept.conductTechnicalInterview(candidate);
+            System.out.println("3.2 Техническое интервью: " + (techSuccess ? "Успешно" : "Провалено"));
+        }
+
+        if (hrSuccess && techSuccess) {
+            System.out.println("3.3 ОБА этапа пройдены успешно. Кандидату " + candidate.name + " предлагается оффер.");
+            
+            stage4_Finalization(candidate);
+
+        } else {
+            System.out.println("3.3 Собеседование провалено. Кандидат получает уведомление об отказе.");
+        }
+    }
+
+    private void stage4_Finalization(Applicant candidate) {
+        System.out.println("\n--- 4. ЗАКЛЮЧИТЕЛЬНЫЙ ЭТАП ---");
+        
+        candidate.isOfferAccepted = true;
+        System.out.println("4.1 Кандидат " + candidate.name + " подтверждает оффер.");
+        
+        System.out.println("4.2 [ПАРАЛЛЕЛЬНО 1]: Система добавляет сотрудника " + candidate.name + " в базу данных.");
+        System.out.println("4.3 [ПАРАЛЛЕЛЬНО 2]: HR-отдел уведомляет IT-отдел о необходимости настройки рабочего места.");
+        
+        System.out.println("\n--- ПРОЦЕСС НАЙМА ЗАВЕРШЕН ---");
+    }
+}
+
+
+
+public class Main {
+    public static void main(String[] args) {
+        
+        RecruitingSystem system = new RecruitingSystem();
+        
+        VacancyRequest juniorJavaDev = new VacancyRequest("Junior Java Developer", "IT-отдел", 2);
+        VacancyRequest seniorJavaDev = new VacancyRequest("Senior Java Developer", "IT-отдел", 4);
+
+        Applicant applicant1 = new Applicant("Иван Смирнов", 5); 
+        Applicant applicant2 = new Applicant("Мария Иванова", 1); 
+        
+        System.out.println("=================================================");
+        System.out.println("СЦЕНАРИЙ 1: УСПЕШНОЕ ТРУДОУСТРОЙСТВО (" + applicant1.name + ")");
+        System.out.println("=================================================");
+        system.startRecruitmentProcess(seniorJavaDev, applicant1);
+        
+        System.out.println("\n\n=================================================");
+        System.out.println("СЦЕНАРИЙ 2: НЕПРОХОЖДЕНИЕ ОТБОРА (" + applicant2.name + ")");
+        System.out.println("=================================================");
+        system.startRecruitmentProcess(seniorJavaDev, applicant2);
+        
+        System.out.println("\n\n=================================================");
+        System.out.println("СЦЕНАРИЙ 3: НЕУТВЕРЖДЕННАЯ ЗАЯВКА (Junior)");
+        System.out.println("=================================================");
+        system.startRecruitmentProcess(juniorJavaDev, applicant1);
+    }
+}
