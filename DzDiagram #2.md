@@ -2,7 +2,6 @@
 classDiagram
     direction LR
 
-    %% Определяем Компоненты как Классы
     class Backend
     class Database
     class RouteOptimizationModule
@@ -13,11 +12,10 @@ classDiagram
     class Frontend
     class MobileApp
 
-    %% Определяем Внешние Системы
     class ExternalCourierServicesAPI
     class PaymentGateway
 
-    %% Добавляем стереотипы для ясности (<<Component>>)
+    %% Стереотипы для обозначения типа компонента
     Backend: <<Component>>
     Database: <<Component>>
     RouteOptimizationModule: <<Component>>
@@ -30,13 +28,11 @@ classDiagram
     ExternalCourierServicesAPI: <<External>>
     PaymentGateway: <<External>>
     
-    %% Описываем Взаимодействия (Associations)
-    
-    %% Frontend interactions (REST API / WebSockets)
-    Frontend -- Backend : Client Requests (REST API)
-    MobileApp -- Backend : Courier Data (REST API / WS)
+    %% Взаимодействия Frontend (Solid Line)
+    Frontend --> Backend : Client Requests (REST API)
+    MobileApp --> Backend : Courier Data (REST API / WS)
 
-    %% Backend and Core Logic interactions
+    %% Взаимодействия Backend (Solid Line)
     Backend --> Database : Read/Write Data (SQL)
     Backend --> RouteOptimizationModule : Optimization Request (gRPC)
     Backend --> WarehouseManagementModule : Inventory Management (API)
@@ -44,13 +40,14 @@ classDiagram
     Backend --> NotificationSystem : Notification Trigger
     Backend --> PaymentGateway : Transaction Processing
 
-    %% Module and External System interactions
-    
-    CourierIntegrationModule -- ExternalCourierServicesAPI : Send/Receive Statuses (API)
+    %% Интеграция с Внешними Службами
+    CourierIntegrationModule --> ExternalCourierServicesAPI : Send/Receive Statuses (API)
     ExternalCourierServicesAPI --> CourierIntegrationModule : Status Webhooks
 
-    NotificationSystem .-> Frontend : Notifications to Clients
-    NotificationSystem .-> MobileApp : Notifications to Couriers
+    %% Уведомления (Dashed Line, самая безопасная замена для Dependency)
+    NotificationSystem ..> Frontend : Notifications to Clients
+    NotificationSystem ..> MobileApp : Notifications to Couriers
 
-    AnalyticsSystem <.. Backend : Collect Delivery Data
+    %% Аналитика
+    Backend ..> AnalyticsSystem : Supplies Delivery Data
     AnalyticsSystem --> Database : Read Data for Reports
