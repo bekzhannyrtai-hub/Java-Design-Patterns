@@ -26,4 +26,5 @@ graph TD
     NT -->|uses| SMS
     NT -->|uses| ES
     
-    UM -->|
+    UM -->|uses| PM
+    UM -->|uses| NT
