@@ -1,4 +1,4 @@
-```meirmad
+```meirmaid
 classDiagram
     direction LR
     
