@@ -1,8 +1,7 @@
 ```mermaid
 classDiagram
     direction TB
-    title UML Class Diagram (University Management)
-
+    
     %% -------------------- STRUCTURAL CLASSES (Composition) --------------------
     
     class University {
