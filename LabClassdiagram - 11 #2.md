@@ -2,7 +2,7 @@
 classDiagram
     direction TB
     
-    %% Абстрактный класс или Интерфейс для общих методов
+    %% Абстрактный класс/Интерфейс для общих методов (Пункт 3 требований)
     class SystemUser {
         <<abstract>>
         +int ID
@@ -10,7 +10,12 @@ classDiagram
         +void UpdateData()
     }
     
-    %% Классы, наследующие от SystemUser
+    %% Наследование (Пункт 2, 3 требований)
+    SystemUser <|-- Patient
+    SystemUser <|-- Doctor
+    
+    %% Основные классы и их атрибуты/методы
+    
     class Patient {
         +String DateOfBirth
         +String Address
@@ -27,15 +32,11 @@ classDiagram
         +PrescribeMedication()
         +UpdateSchedule()
     }
-    
-    SystemUser <|-- Patient
-    SystemUser <|-- Doctor
 
-    %% Основные классы
     class Appointment {
         +Date Date
         +Time Time
-        +String Status %% Planned, Canceled, Completed [cite: 94, 125, 126]
+        +String Status %% Planned, Canceled, Completed
         +Create()
         +Cancel()
         +Complete()
@@ -67,11 +68,11 @@ classDiagram
         +WriteOff()
     }
     
-    %% Ассоциации
-    Patient "1" -- "1" MedicalRecord : имеет > [cite: 114]
-    MedicalRecord "1" -- "*" Appointment : содержит > [cite: 115]
-    Patient "1" -- "*" Appointment : записывается > [cite: 112]
-    Doctor "1" -- "*" Appointment : проводит > [cite: 113]
+    %% Ассоциации (Пункт 2 требований)
+    Patient "1" -- "1" MedicalRecord : имеет (один-к-одному)
+    MedicalRecord "1" -- "*" Appointment : содержит (один-ко-многим)
+    Patient "1" -- "*" Appointment : записывается (один-ко-многим)
+    Doctor "1" -- "*" Appointment : проводит (один-ко-многим)
     Doctor "1" -- "*" Prescription : выписывает
     Patient "1" -- "*" Prescription : получает
-    Medication "*" -- "*" Prescription : используется в > [cite: 116]
+    Medication "*" -- "*" Prescription : используется в (многие-ко-многим)
