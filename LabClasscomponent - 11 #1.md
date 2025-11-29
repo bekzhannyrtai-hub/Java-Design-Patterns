@@ -6,7 +6,7 @@ componentDiagram
     [PaymentService] --> [IPaymentService] : Provides
     [NotificationService] --> [INotificationService] : Provides
     
-    %% Зависимости (OrderService должен зависеть от ProductService и PaymentService [cite: 175, 176])
+    %% Зависимости (OrderService требует интерфейсы)
     [OrderService] --o [IProductService] : Requires
     [OrderService] --o [IPaymentService] : Requires
     [OrderService] --o [IUserService] : Requires
