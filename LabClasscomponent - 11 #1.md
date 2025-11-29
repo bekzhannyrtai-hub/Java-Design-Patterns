@@ -1,36 +1,91 @@
 ```mermaid
-componentDiagram
-    direction TB
-    
-    component UserService {
-        interface IUserService
+classDiagram
+    %% Абстрактные классы и интерфейсы
+    class Person {
+        <<abstract>>
+        +int ID
+        +string Name
+        +DateTime DateOfBirth
+        +string Address
     }
-    
-    component ProductService {
-        interface IProductService
+
+    class MedicalWorker {
+        <<abstract>>
+        +string Specialization
+        +Schedule WorkSchedule
     }
-    
-    component PaymentService {
-        interface IPaymentService
+
+    %% Основные классы
+    class Patient {
+        +string MedicalHistory
+        +registerForAppointment()
+        +updateData()
+        +viewHistory()
     }
-    
-    component NotificationService {
-        interface INotificationService
+
+    class Doctor {
+        +string Office
+        +prescribeTreatment()
+        +writePrescription()
+        +updateSchedule()
     }
-    
-    component OrderService {
-        interface IOrderService
+
+    class Nurse {
+        +string Department
+        +assistDoctor()
+        +administerMedication()
     }
-    
-    %% Связи: OrderService требует другие интерфейсы
-    OrderService "1" --o IProductService : Requires Product Info
-    OrderService "1" --o IPaymentService : Requires Payment Processing
-    OrderService "1" --o IUserService : Requires User Details
-    OrderService "1" --o INotificationService : Requires Notifications
-    
-    %% Реализация интерфейсов
-    IUserService ..> UserService
-    IProductService ..> ProductService
-    IPaymentService ..> PaymentService
-    INotificationService ..> NotificationService
-    IOrderService ..> OrderService
+
+    class Appointment {
+        +int ID
+        +DateTime Date
+        +DateTime Time
+        +string Status
+        +create()
+        +cancel()
+        +complete()
+    }
+
+    class MedicalRecord {
+        +int ID
+        +List~Appointment~ Appointments
+        +string ExaminationResults
+        +addEntry()
+        +updateDiagnosis()
+        +deleteEntry()
+    }
+
+    class Prescription {
+        +int ID
+        +string Medication
+        +string Dosage
+        +DateTime ExpiryDate
+        +create()
+        +update()
+        +cancel()
+    }
+
+    class Medication {
+        +int ID
+        +string Name
+        +int Quantity
+        +DateTime ExpiryDate
+        +order()
+        +dispense()
+        +writeOff()
+    }
+
+    %% Наследование
+    Person <|-- Patient
+    Person <|-- MedicalWorker
+    MedicalWorker <|-- Doctor
+    MedicalWorker <|-- Nurse
+
+    %% Ассоциации
+    Patient "1" -- "*" Appointment
+    Doctor "1" -- "*" Appointment
+    Patient "1" -- "1" MedicalRecord
+    MedicalRecord "1" -- "*" Appointment
+    Doctor "1" -- "*" Prescription
+    Patient "1" -- "*" Prescription
+    Medication "1" -- "*" Prescription
