@@ -1,19 +1,36 @@
 ```mermaid
 componentDiagram
-    [UserService] --> [IUserService] : Provides
-    [ProductService] --> [IProductService] : Provides
-    [OrderService] --> [IOrderService] : Provides
-    [PaymentService] --> [IPaymentService] : Provides
-    [NotificationService] --> [INotificationService] : Provides
+    direction TB
     
-    %% Зависимости (OrderService требует интерфейсы)
-    [OrderService] --o [IProductService] : Requires
-    [OrderService] --o [IPaymentService] : Requires
-    [OrderService] --o [IUserService] : Requires
-    [OrderService] --o [INotificationService] : Requires
+    component UserService {
+        interface IUserService
+    }
+    
+    component ProductService {
+        interface IProductService
+    }
+    
+    component PaymentService {
+        interface IPaymentService
+    }
+    
+    component NotificationService {
+        interface INotificationService
+    }
+    
+    component OrderService {
+        interface IOrderService
+    }
+    
+    %% Связи: OrderService требует другие интерфейсы
+    OrderService "1" --o IProductService : Requires Product Info
+    OrderService "1" --o IPaymentService : Requires Payment Processing
+    OrderService "1" --o IUserService : Requires User Details
+    OrderService "1" --o INotificationService : Requires Notifications
     
     %% Реализация интерфейсов
-    [IProductService] ..> [ProductService] : Realizes
-    [IPaymentService] ..> [PaymentService] : Realizes
-    [IUserService] ..> [UserService] : Realizes
-    [INotificationService] ..> [NotificationService] : Realizes
+    IUserService ..> UserService
+    IProductService ..> ProductService
+    IPaymentService ..> PaymentService
+    INotificationService ..> NotificationService
+    IOrderService ..> OrderService
