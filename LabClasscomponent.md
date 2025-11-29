@@ -1,29 +1,29 @@
 ```mermaid
-componentDiagram
-    %% Компоненты системы
-    component UserService {
-        interface IUserService
-    }
-
-    component ProductService {
-        interface IProductService
-    }
-
-    component OrderService {
-        interface IOrderService
-    }
-
-    component PaymentService {
-        interface IPaymentService
-    }
-
-    component NotificationService {
-        interface INotificationService
-    }
-
-    %% Зависимости между компонентами
-    OrderService --|> UserService : uses IUserService
-    OrderService --|> ProductService : uses IProductService
-    OrderService --|> PaymentService : uses IPaymentService
-    PaymentService --|> NotificationService : uses INotificationService
-    OrderService --|> NotificationService : uses INotificationService
+graph TD
+    subgraph Внутренние компоненты
+        UM[UserManagement<br/>UserManagementAPI]
+        OM[OrderManagement<br/>OrderManagementAPI]
+        RP[RoutePlanner<br/>RoutePlannerAPI]
+        VM[VehicleMonitoring<br/>MonitoringAPI]
+        PM[PaymentManagement<br/>PaymentAPI]
+        NT[NotificationService<br/>NotificationAPI]
+    end
+    
+    subgraph Внешние системы
+        MS[MapService<br/>MapServiceAPI]
+        PG[PaymentGateway<br/>PaymentGatewayAPI]
+        GPS[GPSSystem<br/>GPSAPI]
+        SMS[SMSService<br/>SMSAPI]
+        ES[EmailService<br/>EmailAPI]
+    end
+    
+    %% Взаимосвязи
+    OM -->|uses| UM
+    OM -->|uses| RP
+    RP -->|uses| MS
+    VM -->|uses| GPS
+    PM -->|uses| PG
+    NT -->|uses| SMS
+    NT -->|uses| ES
+    
+    UM -->|
