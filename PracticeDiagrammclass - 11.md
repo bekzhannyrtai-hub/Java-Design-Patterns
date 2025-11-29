@@ -1,89 +1,116 @@
 ```mermaid
 classDiagram
-    direction TB
+    direction LR
     
-    %% -------------------- STRUCTURAL CLASSES (Composition) --------------------
-    
-    class University {
-        - name: String
-        - address: String
-        + addFaculty()
-    }
-    
-    class Faculty {
-        - name: String
-        + addDepartment()
-    }
-
-    class Department {
-        - name: String
-        + addProfessor()
-        + addCourse()
-    }
-    
-    University "1" *-- "1..*" Faculty : contains
-    Faculty "1" *-- "1..*" Department : contains
-
-    %% -------------------- USERS (Inheritance) --------------------
+    %% -------------------- ABSTRACT ENTITIES AND INHERITANCE --------------------
     
     abstract class User {
         - id: int
         - name: String
         - email: String
+        - address: String
+        # role: String
+        + register()
         + login()
-    }
-    
-    class Student {
-        - studentID: String
-        + enrollInCourse()
-        + viewGrades()
+        + updateData()
     }
 
-    class Professor {
-        - position: String
-        + conductClass()
-        + assignGrade()
+    class Client {
+        - loyaltyPoints: int
+        + addLoyaltyPoints(points: int)
+        + leaveReview()
     }
-    
+
     class Administrator {
-        + manageStructures()
+        + logAction(action: String)
+        + manageProducts()
     }
-    
-    User <|-- Student
-    User <|-- Professor
+
+    User <|-- Client
     User <|-- Administrator
 
-    %% -------------------- ACADEMIC PROCESS AND RELATIONS --------------------
-
-    class Course {
-        - title: String
-        + addStudent()
+    abstract class Payment {
+        - id: int
+        - amount: double
+        - status: String
+        + process()
+        + refund()
     }
 
-    class Schedule {
-        - date: Date
-        - time: Time
-        - room: String
-        + createSchedule()
-    }
+    class CardPayment
+    class WalletPayment
 
-    class Exam {
-        - date: Date
-        + setExam()
-    }
+    Payment <|-- CardPayment
+    Payment <|-- WalletPayment
 
-    class Grade {
-        - score: int
-        - date: Date
-    }
-
-    Department "1" *-- "1..*" Course : assigns
-    Department "1" o-- "0..*" Professor : includes
+    %% -------------------- CORE ENTITIES --------------------
     
-    Professor "1..*" -- "1..*" Course : teaches
-    Student "0..*" -- "0..*" Course : studies
+    class Product {
+        - id: int
+        - name: String
+        - price: double
+        - stockQuantity: int
+        - discount: double
+        + getFinalPrice(): double
+        + create()
+        + update()
+    }
     
-    Course "1" -- "0..*" Schedule : has
-    Exam "1" -- "0..*" Grade : contains
-    Course "1" -- "0..*" Exam : linked_to
-    Student "1" -- "0..*" Grade : receives
+    class Category {
+        - id: int
+        - name: String
+    }
+    
+    class Order {
+        - id: int
+        - creationDate: Date
+        - status: Status (CREATED, DELIVERED, CANCELED)
+        - total: double
+        - promoCode: String
+        + checkout()
+        + cancel()
+        + pay()
+        + calculateTotal()
+    }
+    
+    class Delivery {
+        - id: int
+        - address: String
+        - status: String
+        + dispatch()
+        + track()
+        + complete()
+    }
+    
+    class Courier {
+        - name: String
+        + startDelivery()
+    }
+    
+    class Review {
+        - rating: int
+        - comment: String
+    }
+    
+    %% -------------------- ASSOCIATIVE CLASS --------------------
+    
+    class OrderItem {
+        - quantity: int
+    }
+    
+    %% -------------------- RELATIONSHIPS (ASSOCIATIONS) --------------------
+    
+    Client "1" --> "0..*" Order : places
+    
+    Order "1" --> "1" Delivery : linked_to
+    Delivery "1" --> "1" Courier : assigned
+    
+    Order "1" *-- "1..*" OrderItem : contains
+    OrderItem "0..*" --> "1" Product : relates_to
+
+    Product "0..*" --> "1" Category : belongs_to
+    
+    Order "0..*" --> "1" Payment : paid_via
+    
+    Client "1" --> "0..*" Review : leaves
+    Review "0..*" --> "1" Product : describes
