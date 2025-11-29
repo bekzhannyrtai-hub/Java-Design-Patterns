@@ -1,44 +1,99 @@
-```mermaid
 classDiagram
     direction LR
+    
+    %% Inheritance
+    class User {
+        -int id
+        -string firstName
+        -string lastName
+        -string login
+        -string password
+    }
+    class Administrator {
+        +manageStructures()
+        +manageUsers()
+    }
+    class Student {
+        -string recordBookNumber
+        -list<Course> courseList
+        +registerForCourse()
+        +viewGrades()
+    }
+    class Professor {
+        -list<Course> courseList
+        -string position
+        +conductClass()
+        +setGrade()
+        +manageSchedule()
+    }
 
-    class User
-    class Client
-    class Administrator
+    User <|-- Administrator : Inheritance
+    User <|-- Student : Inheritance
+    User <|-- Professor : Inheritance
 
-    abstract class Payment
-    class CardPayment
-    class WalletPayment
-    
-    class Product 
-    class Category
-    class Order
-    class Delivery
-    class Courier
-    class Review
-    class OrderItem
-    
-    User : - id: int
-    User : + register()
-    
-    Client : - loyaltyPoints: int
-    
-    User <|-- Client
-    User <|-- Administrator
+    %% Aggregation and Composition
+    class University {
+        -string name
+        -string address
+        -list<Faculty> facultyList
+        +addFaculty()
+        +removeFaculty()
+    }
+    class Faculty {
+        -string name
+        -list<Department> departmentList
+        +addDepartment()
+        +removeDepartment()
+    }
+    class Department {
+        -string name
+        -list<Professor> professorList
+        -list<Course> courseList
+        +addProfessor()
+        +removeProfessor()
+    }
 
-    Payment : + process()
-    Payment <|-- CardPayment
-    Payment <|-- WalletPayment
-
-    Product : + getFinalPrice(): double
-    Order : + checkout()
+    University *-- "1" Faculty : contains 1..*
+    Faculty *-- "1" Department : contains 1..*
+    Department "1" -- "0..*" Professor : isAssignedTo
+    Department "1" -- "0..*" Course : isAssignedTo
     
-    Client "1" --> "0..*" Order : places
-    Order "1" *-- "1..*" OrderItem : contains
-    OrderItem "0..*" --> "1" Product : relates_to
-    Order "1" --> "1" Delivery : linked_to
-    Delivery "1" --> "1" Courier : assigned
-    Order "0..*" --> "1" Payment : paid_via
-    Client "1" --> "0..*" Review : leaves
-    Review "0..*" --> "1" Product : describes
-    Product "0..*" --> "1" Category : belongs_to
+    %% Associations
+    class Course {
+        -string name
+        -Department department
+        -list<Student> studentList
+        -Schedule schedule
+        +addStudent()
+        +removeStudent()
+    }
+    class Schedule {
+        -string date
+        -string time
+        -string classroom
+        +createSchedule()
+        +modifySchedule()
+    }
+    class Exam {
+        -Course course
+        -string date
+        -list<Grade> gradeList
+        +scheduleExam()
+        +setGrade()
+    }
+    class Grade {
+        -int value
+        -Student student
+        -Professor professor
+        -Exam exam
+    }
+
+    Course "1" -- "1..*" Professor : isTaughtBy
+    Course "1" -- "0..*" Student : enrolls 1..*
+    Course "1" -- "0..*" Exam : has
+    Exam "1" -- "1..*" Grade : contains
+    Course "1" -- "0..*" Schedule : has
+    Schedule "0..*" -- "0..*" Student : links
+    Schedule "0..*" -- "0..*" Professor : links
+    Student "1" -- "0..*" Grade : receives
+    Professor "1" -- "0..*" Grade : sets
