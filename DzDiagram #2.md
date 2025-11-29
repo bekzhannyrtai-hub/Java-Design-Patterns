@@ -1,39 +1,56 @@
 ```mermaid
-componentDiagram
+classDiagram
+    direction LR
 
-    component [Backend Server] as Backend
-    component [Database] as DB
-    component [Route Optimization Module] as RouteOpt
-    component [Warehouse Management Module] as Warehouse
-    component [Courier Integration Module] as CourierAPIModule
-    component [Notification System] as NotifSystem
-    component [Analytics System] as Analytics
+    %% Определяем Компоненты как Классы
+    class Backend
+    class Database
+    class RouteOptimizationModule
+    class WarehouseManagementModule
+    class CourierIntegrationModule
+    class NotificationSystem
+    class AnalyticsSystem
+    class Frontend
+    class MobileApp
 
-    component [Web Application (Clients)] as Frontend
-    component [Mobile App (Couriers)] as Mobile
+    %% Определяем Внешние Системы
+    class ExternalCourierServicesAPI
+    class PaymentGateway
 
-    component [External Courier Services API] as ExtCourier
-    component [Payment Gateway] as PaymentGateway
-
+    %% Добавляем стереотипы для ясности (<<Component>>)
+    Backend: <<Component>>
+    Database: <<Component>>
+    RouteOptimizationModule: <<Component>>
+    WarehouseManagementModule: <<Component>>
+    CourierIntegrationModule: <<Component>>
+    NotificationSystem: <<Component>>
+    AnalyticsSystem: <<Component>>
+    Frontend: <<Client>>
+    MobileApp: <<Client>>
+    ExternalCourierServicesAPI: <<External>>
+    PaymentGateway: <<External>>
+    
+    %% Описываем Взаимодействия (Associations)
+    
     %% Frontend interactions (REST API / WebSockets)
-    Frontend --(REST API)--> Backend : Client Requests
-    Mobile --(REST API / WebSockets)--> Backend : Courier Data
+    Frontend -- Backend : Client Requests (REST API)
+    MobileApp -- Backend : Courier Data (REST API / WS)
 
     %% Backend and Core Logic interactions
-    Backend --> DB : Read/Write Data (SQL)
-    Backend --> RouteOpt : Route Optimization Request (gRPC)
-    Backend --> Warehouse : Inventory Management (Inventory API)
-    Backend --> CourierAPIModule : Delivery Management
-    Backend --> NotifSystem : Notification Trigger
+    Backend --> Database : Read/Write Data (SQL)
+    Backend --> RouteOptimizationModule : Optimization Request (gRPC)
+    Backend --> WarehouseManagementModule : Inventory Management (API)
+    Backend --> CourierIntegrationModule : Delivery Management
+    Backend --> NotificationSystem : Notification Trigger
     Backend --> PaymentGateway : Transaction Processing
 
     %% Module and External System interactions
     
-    CourierAPIModule --(External API)--> ExtCourier : Send/Receive Statuses
-    ExtCourier --(Webhook)--> CourierAPIModule : Status Webhooks
+    CourierIntegrationModule -- ExternalCourierServicesAPI : Send/Receive Statuses (API)
+    ExternalCourierServicesAPI --> CourierIntegrationModule : Status Webhooks
 
-    NotifSystem .-> Frontend : Notifications to Clients
-    NotifSystem .-> Mobile : Notifications to Couriers
+    NotificationSystem .-> Frontend : Notifications to Clients
+    NotificationSystem .-> MobileApp : Notifications to Couriers
 
-    Analytics <-. Backend : Collect Delivery Data
-    Analytics --> DB : Read Data for Reports
+    AnalyticsSystem <.. Backend : Collect Delivery Data
+    AnalyticsSystem --> Database : Read Data for Reports
