@@ -2,103 +2,101 @@
 classDiagram
     direction LR
 
-  
-    class Пользователь {
+    class User {
         <<Abstract>>
         +int ID
-        +String имя
+        +String name
         +String email
-        +String адрес
-        +String телефон
-        +String роль
-        +зарегистрироваться()
-        +войти()
-        +обновитьДанные()
+        +String address
+        +String phone
+        +String role
+        +register()
+        +login()
+        +updateData()
     }
 
-  
-    class Клиент {
-        -int баллы_лояльности
-        +сделатьЗаказ()
+   
+    class Client {
+        -int loyaltyPoints
+        +placeOrder()
     }
-    class Администратор {
-        +управлятьТоварами()
-        +просмотретьОтчеты()
+    class Administrator {
+        +manageProducts()
+        +viewReports()
     }
-    Клиент --|> Пользователь : наследование
-    Администратор --|> Пользователь : наследование
+    Client --|> User : inherits
+    Administrator --|> User : inherits
 
-
-    class Товар {
+ 
+    class Product {
         +int ID
-        +String название
-        +String описание
-        +double цена
-        -int кол-во_на_складе
-        +создать()
-        +обновить()
-        +удалить()
+        +String name
+        +String description
+        +double price
+        -int quantityInStock
+        +create()
+        +update()
+        +delete()
     }
-    class Категория {
+    class Category {
         +int ID
-        +String название
+        +String name
     }
-    class Заказ {
+    class Order {
         +int ID
-        +LocalDate дата_создания
-        +String статус
-        +double сумма
-        -String промокод
-        +оформить()
-        +отменить()
-        +оплатить()
+        +LocalDate dateCreated
+        +String status
+        +double amount
+        -String promoCode
+        +process()
+        +cancel()
+        +pay()
     }
-    class Доставка {
+    class Delivery {
         +int ID
-        +String адрес
-        +String статус_доставки
-        +String курьер
-        +отправить()
-        +отслеживать()
-        +завершить()
+        +String address
+        +String deliveryStatus
+        +String courier
+        +dispatch()
+        +track()
+        +complete()
     }
-    class Платёж {
+    class Payment {
         +int ID
-        +String тип_платежа
-        +double сумма
-        +String статус
-        +LocalDate дата
-        +обработать()
-        +вернуть()
+        +String type
+        +double amount
+        +String status
+        +LocalDate date
+        +processPayment()
+        +refund()
     }
-    class Отзыв {
+    class Review {
         +int ID
-        +int рейтинг
-        +String текст
+        +int rating
+        +String text
     }
-    class Корзина {
+    class Cart {
         +int ID
-        +double общая_стоимость
-        +добавитьТовар(Товар)
-        +удалитьТовар(Товар)
-        +рассчитатьСтоимость()
+        +double totalCost
+        +addItem(Product)
+        +removeItem(Product)
+        +calculateTotal()
     }
 
 
+    Client "1" -- "1" Cart : has
+    Client "1" -- "0..*" Order : makes
+    Client "1" -- "0..*" Review : leaves
 
-    Клиент "1" -- "1" Корзина : имеет
-    Клиент "1" -- "0..*" Заказ : делает
-    Клиент "1" -- "0..*" Отзыв : оставляет
+    Order "1" -- "1" Delivery : associated_with
+    Order "1" -- "1" Payment : includes
+    Order "1" -- "1..*" Product : contains
 
-    Заказ "1" -- "1" Доставка : связана_с
-    Заказ "1" -- "1" Платёж : включает
-    Заказ "1" -- "1..*" Товар : содержит
+    Cart "1" -- "0..*" Product : contains
 
-    Корзина "1" -- "0..*" Товар : содержит
+    Product "0..*" -- "1" Category : belongs_to
+    Product "0..*" -- "0..*" Review : has
 
-    Товар "0..*" -- "1" Категория : принадлежит_к
-    Товар "0..*" -- "0..*" Отзыв : имеет
-
-    %% Дополнительно
-    Администратор ..> Товар : управляет
-    Заказ ..> Отзыв : может_быть_оценен
+    %% Additional
+    Administrator ..> Product : manages
+    Order ..> Review : can_be_reviewed
