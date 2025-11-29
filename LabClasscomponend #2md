@@ -1,0 +1,45 @@
+```mermaid
+componentDiagram
+    direction LR
+    
+    %% Внешние системы
+    [MapService API] as MS_API
+    [Payment Gateway API] as PG_API
+    [GPS Monitoring System] as GPS_API
+    
+    %% Внутренние компоненты
+    component UserManagement {
+        interface UserManagementAPI
+        UserManagementAPI --> NotificationAPI : Requires
+        UserManagementAPI --> PaymentAPI : Requires
+    }
+    
+    component RoutePlanner {
+        interface RoutePlannerAPI
+    }
+    
+    component Monitoring {
+        interface MonitoringAPI
+    }
+    
+    component OrderManagement {
+        interface OrderManagementAPI
+    }
+    
+    component Payment {
+        interface PaymentAPI
+    }
+    
+    component Notification {
+        interface NotificationAPI
+    }
+    
+    %% Зависимости
+    OrderManagement --o RoutePlannerAPI : Requires Route
+    OrderManagement --o UserManagementAPI : Requires User
+    
+    RoutePlanner --o MS_API : Requires Map Data
+    Monitoring --o GPS_API : Requires GPS Feed
+    Payment --o PG_API : Requires Gateway
+    
+    OrderManagement --o NotificationAPI : Requires
