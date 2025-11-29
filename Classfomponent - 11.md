@@ -1,7 +1,5 @@
 ```mermaid
 C4Component
-    title UML Component Diagram for Online Banking System
-    
     Component(Frontend, "Frontend", "Web and Mobile Application", "Provides user interaction.")
     Component(Backend, "Backend", "Server Logic", "Handles application logic and request routing.")
     Component(Database, "Database", "Data Storage", "Stores information about clients, accounts, and transactions.")
