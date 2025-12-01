@@ -1,11 +1,14 @@
 ```mermaid
 graph LR
+    subgraph Система управления сетью библиотек
         direction TB
 
+        %% Акторы
         actor Reader [Читатель]
         actor Librarian [Библиотекарь]
         actor Administrator [Администратор]
 
+        %% Варианты использования (Use Cases)
         usecase UC_Register [Регистрация пользователя]
         usecase UC_ViewSearch [Просмотр и поиск книг]
         usecase UC_Reserve [Бронирование книги]
@@ -17,7 +20,9 @@ graph LR
         usecase UC_ViewAnalytics [Просмотр аналитики]
         usecase UC_ManageAccounts [Управление учетными записями]
         usecase UC_Search [Поиск книг по автору, названию, жанру]
+        usecase UC_ViewReserveList [Просмотр списка активных бронирований]
 
+        %% Связи Актора с Вариантами использования
         
         Reader --> UC_Register
         Reader --> UC_ViewSearch
@@ -27,12 +32,14 @@ graph LR
 
         Librarian --> UC_ManageBooks
         Librarian --> UC_IssueReturn
-        Librarian --> UC_ViewReserveList [Просмотр списка активных бронирований]
+        Librarian --> UC_ViewReserveList 
 
         Administrator --> UC_ManageBranches
         Administrator --> UC_ManageAccounts
         Administrator --> UC_ViewAnalytics
 
+        %% Обобщение/Наследование (Иерархия ролей)
+        %% Примечание: В UML это обычно обозначается связью Актор <|-- Актор
         UC_ViewSearch --|> Librarian
         UC_ViewSearch --|> Administrator
         UC_Reserve --|> Librarian
@@ -42,9 +49,11 @@ graph LR
         UC_ViewHistory --|> Librarian
         UC_ViewHistory --|> Administrator
         
+        %% Специализация для акторов
         Reader <|-- Librarian
         Reader <|-- Administrator
 
+        %% Связи <<include>> и <<extend>>
         UC_ViewSearch ..> UC_Search : <<include>>
         UC_Reserve ..> UC_CancelReserve : <<extend>>
         
