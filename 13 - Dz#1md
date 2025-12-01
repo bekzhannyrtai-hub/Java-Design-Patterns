@@ -1,0 +1,51 @@
+```mermaid
+graph LR
+        direction TB
+
+        actor Reader [Читатель]
+        actor Librarian [Библиотекарь]
+        actor Administrator [Администратор]
+
+        usecase UC_Register [Регистрация пользователя]
+        usecase UC_ViewSearch [Просмотр и поиск книг]
+        usecase UC_Reserve [Бронирование книги]
+        usecase UC_CancelReserve [Отмена бронирования]
+        usecase UC_ViewHistory [Просмотр истории бронирований]
+        usecase UC_ManageBooks [Управление книгами (Добавление/Удаление)]
+        usecase UC_IssueReturn [Выдача/возврат книг]
+        usecase UC_ManageBranches [Управление филиалами]
+        usecase UC_ViewAnalytics [Просмотр аналитики]
+        usecase UC_ManageAccounts [Управление учетными записями]
+        usecase UC_Search [Поиск книг по автору, названию, жанру]
+
+        
+        Reader --> UC_Register
+        Reader --> UC_ViewSearch
+        Reader --> UC_Reserve
+        Reader --> UC_CancelReserve
+        Reader --> UC_ViewHistory
+
+        Librarian --> UC_ManageBooks
+        Librarian --> UC_IssueReturn
+        Librarian --> UC_ViewReserveList [Просмотр списка активных бронирований]
+
+        Administrator --> UC_ManageBranches
+        Administrator --> UC_ManageAccounts
+        Administrator --> UC_ViewAnalytics
+
+        UC_ViewSearch --|> Librarian
+        UC_ViewSearch --|> Administrator
+        UC_Reserve --|> Librarian
+        UC_Reserve --|> Administrator
+        UC_CancelReserve --|> Librarian
+        UC_CancelReserve --|> Administrator
+        UC_ViewHistory --|> Librarian
+        UC_ViewHistory --|> Administrator
+        
+        Reader <|-- Librarian
+        Reader <|-- Administrator
+
+        UC_ViewSearch ..> UC_Search : <<include>>
+        UC_Reserve ..> UC_CancelReserve : <<extend>>
+        
+    end
