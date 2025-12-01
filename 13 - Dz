@@ -1,0 +1,339 @@
+public interface TicketMachineState {
+    void selectTicket();
+    void insertMoney(double amount);
+    void dispenseTicket();
+    void cancelTransaction();
+    void printStatus();
+}
+
+public class TicketMachine {
+    private TicketMachineState currentState;
+    private double balance;
+    private double ticketPrice = 50.0;
+    private int ticketsAvailable = 10;
+    
+    private final TicketMachineState idleState;
+    private final TicketMachineState waitingForMoneyState;
+    private final TicketMachineState moneyReceivedState;
+    private final TicketMachineState ticketDispensedState;
+    private final TicketMachineState transactionCanceledState;
+    
+    public TicketMachine() {
+        this.idleState = new IdleState(this);
+        this.waitingForMoneyState = new WaitingForMoneyState(this);
+        this.moneyReceivedState = new MoneyReceivedState(this);
+        this.ticketDispensedState = new TicketDispensedState(this);
+        this.transactionCanceledState = new TransactionCanceledState(this);
+        
+        this.currentState = idleState;
+        this.balance = 0.0;
+    }
+    
+    public void setState(TicketMachineState state) {
+        this.currentState = state;
+        this.currentState.printStatus();
+    }
+    
+    public void selectTicket() {
+        if (ticketsAvailable <= 0) {
+            System.out.println("Билеты закончились!");
+            return;
+        }
+        currentState.selectTicket();
+    }
+    
+    public void insertMoney(double amount) {
+        currentState.insertMoney(amount);
+    }
+    
+    public void dispenseTicket() {
+        currentState.dispenseTicket();
+    }
+    
+    public void cancelTransaction() {
+        currentState.cancelTransaction();
+    }
+    
+    public double getBalance() {
+        return balance;
+    }
+    
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+    
+    public double getTicketPrice() {
+        return ticketPrice;
+    }
+    
+    public int getTicketsAvailable() {
+        return ticketsAvailable;
+    }
+    
+    public void decrementTickets() {
+        if (ticketsAvailable > 0) {
+            ticketsAvailable--;
+        }
+    }
+    
+    public TicketMachineState getIdleState() {
+        return idleState;
+    }
+    
+    public TicketMachineState getWaitingForMoneyState() {
+        return waitingForMoneyState;
+    }
+    
+    public TicketMachineState getMoneyReceivedState() {
+        return moneyReceivedState;
+    }
+    
+    public TicketMachineState getTicketDispensedState() {
+        return ticketDispensedState;
+    }
+    
+    public TicketMachineState getTransactionCanceledState() {
+        return transactionCanceledState;
+    }
+    
+    public void printMachineInfo() {
+        System.out.println("Цена билета: " + ticketPrice + " руб.");
+        System.out.println("Доступно билетов: " + ticketsAvailable);
+        System.out.println("Текущий баланс: " + balance + " руб.");
+    }
+}
+
+class IdleState implements TicketMachineState {
+    private final TicketMachine machine;
+    
+    public IdleState(TicketMachine machine) {
+        this.machine = machine;
+    }
+    
+    @Override
+    public void selectTicket() {
+        System.out.println("Выбран билет. Цена: " + machine.getTicketPrice() + " руб.");
+        machine.setState(machine.getWaitingForMoneyState());
+    }
+    
+    @Override
+    public void insertMoney(double amount) {
+        System.out.println("Сначала выберите билет.");
+    }
+    
+    @Override
+    public void dispenseTicket() {
+        System.out.println("Сначала выберите билет и внесите деньги.");
+    }
+    
+    @Override
+    public void cancelTransaction() {
+        System.out.println("Нет активной транзакции для отмены.");
+    }
+    
+    @Override
+    public void printStatus() {
+        System.out.println("[Состояние: Ожидание]");
+    }
+}
+
+class WaitingForMoneyState implements TicketMachineState {
+    private final TicketMachine machine;
+    
+    public WaitingForMoneyState(TicketMachine machine) {
+        this.machine = machine;
+    }
+    
+    @Override
+    public void selectTicket() {
+        System.out.println("Билет уже выбран. Внесите деньги или отмените.");
+    }
+    
+    @Override
+    public void insertMoney(double amount) {
+        if (amount <= 0) {
+            System.out.println("Неверная сумма.");
+            return;
+        }
+        
+        double newBalance = machine.getBalance() + amount;
+        machine.setBalance(newBalance);
+        
+        System.out.println("Внесено: " + amount + " руб.");
+        System.out.println("Текущий баланс: " + newBalance + " руб.");
+        System.out.println("Нужно еще: " + (machine.getTicketPrice() - newBalance) + " руб.");
+        
+        if (newBalance >= machine.getTicketPrice()) {
+            System.out.println("Сумма собрана!");
+            machine.setState(machine.getMoneyReceivedState());
+        }
+    }
+    
+    @Override
+    public void dispenseTicket() {
+        System.out.println("Внесите полную сумму: " + machine.getTicketPrice() + " руб.");
+    }
+    
+    @Override
+    public void cancelTransaction() {
+        System.out.println("Транзакция отменена. Возврат денег: " + machine.getBalance() + " руб.");
+        machine.setBalance(0);
+        machine.setState(machine.getTransactionCanceledState());
+    }
+    
+    @Override
+    public void printStatus() {
+        System.out.println("[Состояние: Ожидание денег]");
+        System.out.println("Необходимо: " + machine.getTicketPrice() + " руб.");
+        System.out.println("Текущий баланс: " + machine.getBalance() + " руб.");
+    }
+}
+
+class MoneyReceivedState implements TicketMachineState {
+    private final TicketMachine machine;
+    
+    public MoneyReceivedState(TicketMachine machine) {
+        this.machine = machine;
+    }
+    
+    @Override
+    public void selectTicket() {
+        System.out.println("Транзакция уже начата.");
+    }
+    
+    @Override
+    public void insertMoney(double amount) {
+        System.out.println("Деньги уже внесены.");
+    }
+    
+    @Override
+    public void dispenseTicket() {
+        System.out.println("Выдаем билет...");
+        
+        double change = machine.getBalance() - machine.getTicketPrice();
+        if (change > 0) {
+            System.out.println("Ваша сдача: " + change + " руб.");
+        }
+        
+        machine.decrementTickets();
+        machine.setBalance(0);
+        machine.setState(machine.getTicketDispensedState());
+    }
+    
+    @Override
+    public void cancelTransaction() {
+        System.out.println("Транзакция отменена. Возврат денег: " + machine.getBalance() + " руб.");
+        machine.setBalance(0);
+        machine.setState(machine.getTransactionCanceledState());
+    }
+    
+    @Override
+    public void printStatus() {
+        System.out.println("[Состояние: Деньги получены]");
+        System.out.println("Готово к выдаче билета!");
+    }
+}
+
+class TicketDispensedState implements TicketMachineState {
+    private final TicketMachine machine;
+    
+    public TicketDispensedState(TicketMachine machine) {
+        this.machine = machine;
+    }
+    
+    @Override
+    public void selectTicket() {
+        System.out.println("Возврат в начальное состояние...");
+        machine.setState(machine.getIdleState());
+        machine.selectTicket();
+    }
+    
+    @Override
+    public void insertMoney(double amount) {
+        System.out.println("Транзакция завершена. Начните новую.");
+    }
+    
+    @Override
+    public void dispenseTicket() {
+        System.out.println("Билет уже выдан.");
+    }
+    
+    @Override
+    public void cancelTransaction() {
+        System.out.println("Транзакция уже завершена.");
+    }
+    
+    @Override
+    public void printStatus() {
+        System.out.println("[Состояние: Билет выдан]");
+        System.out.println("Транзакция успешно завершена!");
+    }
+}
+
+class TransactionCanceledState implements TicketMachineState {
+    private final TicketMachine machine;
+    
+    public TransactionCanceledState(TicketMachine machine) {
+        this.machine = machine;
+    }
+    
+    @Override
+    public void selectTicket() {
+        System.out.println("Начинаем новую транзакцию...");
+        machine.setState(machine.getIdleState());
+        machine.selectTicket();
+    }
+    
+    @Override
+    public void insertMoney(double amount) {
+        System.out.println("Транзакция отменена. Начните заново.");
+    }
+    
+    @Override
+    public void dispenseTicket() {
+        System.out.println("Транзакция отменена.");
+    }
+    
+    @Override
+    public void cancelTransaction() {
+        System.out.println("Транзакция уже отменена.");
+    }
+    
+    @Override
+    public void printStatus() {
+        System.out.println("[Состояние: Транзакция отменена]");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        TicketMachine machine = new TicketMachine();
+        
+        System.out.println("=== АВТОМАТ ПО ПРОДАЖЕ БИЛЕТОВ ===");
+        
+        System.out.println("\n--- Успешная покупка ---");
+        machine.selectTicket();
+        machine.insertMoney(30);
+        machine.insertMoney(30);
+        machine.dispenseTicket();
+        
+        System.out.println("\n--- Отмена транзакции ---");
+        machine.selectTicket();
+        machine.insertMoney(20);
+        machine.cancelTransaction();
+        
+        System.out.println("\n--- Покупка после отмены ---");
+        machine.selectTicket();
+        machine.insertMoney(60);
+        machine.dispenseTicket();
+        
+        System.out.println("\n--- Ошибочные действия ---");
+        machine.insertMoney(10);
+        machine.dispenseTicket();
+        
+        System.out.println("\n--- Точная сумма ---");
+        machine.selectTicket();
+        machine.insertMoney(50);
+        machine.dispenseTicket();
+    }
+}
