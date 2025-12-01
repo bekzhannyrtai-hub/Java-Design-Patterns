@@ -1,0 +1,21 @@
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    
+    Idle --> WaitingForMoney : Выбор билета
+    WaitingForMoney --> MoneyReceived : Внесена сумма
+    MoneyReceived --> TicketDispensed : Выдать билет
+    TicketDispensed --> Idle : Сброс
+    
+    WaitingForMoney --> TransactionCanceled : Отмена
+    MoneyReceived --> TransactionCanceled : Отмена
+    
+    TransactionCanceled --> Idle : Возврат денег
+    
+    note right of WaitingForMoney
+        Можно отменить
+    end note
+    
+    note right of MoneyReceived
+        Можно отменить
+    end note
