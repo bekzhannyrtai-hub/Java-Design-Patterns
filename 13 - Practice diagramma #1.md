@@ -1,38 +1,36 @@
 ```mermaid
-stateDiagram-v2
-    [*] --> Idle
+graph TB
+    subgraph "CRM Система управления клиентами"
+        UI[Компонент: UserInterface<br/>Предоставляет интерфейс пользователя]
+        
+        CC[Компонент: ClientController<br/>Управление клиентами]
+        TC[Компонент: TaskController<br/>Управление задачами]
+        RC[Компонент: ReportController<br/>Генерация отчетов]
+        
+        DB[(База данных<br/>Хранение данных)]
+    end
     
-    Idle --> CarSelected: selectCar()
-    CarSelected --> Idle: cancelOrder()
-    CarSelected --> OrderConfirmed: confirmOrder()
-    CarSelected --> CarSelected: changeCar()
+    UI -->|"addClient(), getClients()"| CC
+    UI -->|"addTask(), completeTask()"| TC
+    UI -->|"generateReport()"| RC
     
-    OrderConfirmed --> CarArrived: carStarted()
-    OrderConfirmed --> TripCancelled: cancelOrder()
+    CC -->|"saveClient(), updateClient()"| DB
+    TC -->|"saveTask(), updateTask()"| DB
+    RC -->|"queryData()"| DB
     
-    CarArrived --> InTrip: startTrip()
-    CarArrived --> TripCancelled: cancelOrder()
+    CC -->|"getClientData()"| RC
+    TC -->|"getTaskData()"| RC
     
-    InTrip --> TripCompleted: completeTrip()
-    InTrip --> TripCancelled: emergencyCancel()
+   
+    subgraph UI
+        direction LR
+        UIP1[Порт: ClientOperations]
+        UIP2[Порт: TaskOperations]
+        UIP3[Порт: ReportOperations]
+    end
     
-    TripCompleted --> [*]: paymentCompleted()
-    TripCompleted --> TripCompleted: paymentFailed()
-    
-    TripCancelled --> [*]: cleanup()
-    
-    state CarArrived {
-        [*] --> Waiting
-        Waiting --> UserNotified: notifyUser()
-        UserNotified --> [*]: userResponded()
-    }
-    
-    note right of CarSelected
-        Можно изменить автомобиль
-        до подтверждения заказа
-    end note
-    
-    note right of TripCompleted
-        Возможна система рейтинга
-        водителя и поездки
-    end note
+    style UI fill:#e1f5fe
+    style CC fill:#e8f5e8
+    style TC fill:#fff3e0
+    style RC fill:#f3e5f5
+    style DB fill:#fce4ec
