@@ -1,31 +1,28 @@
 ```mermaid
 graph TB
-    subgraph "Система управления заказами"
-        UI2[<b>UserInterface</b><br/>Интернет-магазин]
-        
-        OC[<b>OrderController</b><br/>Управление заказами]
-        PC[<b>PaymentController</b><br/>Обработка платежей]
-        DC[<b>DeliveryController</b><br/>Управление доставкой]
-        IC[<b>InventoryController</b><br/>Управление складом]
-        
-        DB2[(<b>Database</b><br/>Хранилище заказов)]
-    end
+    UI2[UserInterface<br/>Магазин]
     
-    %% Взаимодействия
-    UI2 -->|"createOrder(), viewOrders()"| OC
-    UI2 -->|"processPayment()"| PC
-    UI2 -->|"trackDelivery()"| DC
+    OC[OrderController<br/>Заказы]
+    PC[PaymentController<br/>Платежи]
+    DC[DeliveryController<br/>Доставка]
+    IC[InventoryController<br/>Склад]
     
-    OC -->|"saveOrder(), updateStatus()"| DB2
-    PC -->|"recordPayment()"| DB2
-    DC -->|"updateDeliveryStatus()"| DB2
-    IC -->|"updateStock()"| DB2
+    DB2[(Database<br/>Заказы/Товары)]
     
-    OC -->|"checkInventory()"| IC
-    OC -->|"initiatePayment()"| PC
-    OC -->|"scheduleDelivery()"| DC
-    PC -->|"confirmPayment()"| OC
-    DC -->|"confirmDelivery()| OC
+    UI2 --> OC
+    UI2 --> PC
+    UI2 --> DC
+    
+    OC --> DB2
+    PC --> DB2
+    DC --> DB2
+    IC --> DB2
+    
+    OC --> IC
+    OC --> PC
+    OC --> DC
+    PC --> OC
+    DC --> OC
     
     style UI2 fill:#e1f5fe
     style OC fill:#e8f5e8
