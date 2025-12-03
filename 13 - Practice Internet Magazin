@@ -1,0 +1,131 @@
+@RestController
+@RequestMapping("/api/orders")
+public class OrderController {
+    
+    private final OrderService orderService;
+    private final PaymentService paymentService;
+    
+    @PostMapping
+    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest request) {
+        Order order = orderService.createOrder(request);
+        return ResponseEntity.ok(order);
+    }
+    
+    @PostMapping("/{orderId}/pay")
+    public ResponseEntity<PaymentResponse> processPayment(
+            @PathVariable Long orderId,
+            @RequestBody PaymentRequest paymentRequest) {
+        PaymentResponse response = paymentService.processPayment(orderId, paymentRequest);
+        return ResponseEntity.ok(response);
+    }
+}
+
+@Service
+public class OrderService {
+    
+    private final ProductRepository productRepository;
+    private final OrderRepository orderRepository;
+    private final InventoryService inventoryService;
+    
+    @Transactional
+    public Order createOrder(OrderRequest request) {
+        validateStockAvailability(request.getItems());
+        
+        Order order = new Order();
+        order.setCustomer(request.getCustomer());
+        order.setItems(request.getItems());
+        order.setTotalAmount(calculateTotal(request.getItems()));
+        order.setStatus(OrderStatus.PENDING);
+        order.setCreatedAt(LocalDateTime.now());
+        
+        inventoryService.reserveItems(request.getItems());
+        
+        return orderRepository.save(order);
+    }
+    
+    @Transactional
+    public void confirmOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new OrderNotFoundException(orderId));
+        
+        if (order.getStatus() != OrderStatus.PAID) {
+            throw new OrderNotPaidException(orderId);
+        }
+        
+        order.setStatus(OrderStatus.CONFIRMED);
+        orderRepository.save(order);
+        
+        notificationService.sendOrderConfirmedNotification(order);
+        
+        deliveryService.scheduleDelivery(order);
+    }
+}
+
+@Service
+public class PaymentService {
+    
+    private final PaymentGateway paymentGateway;
+    private final OrderRepository orderRepository;
+    
+    public PaymentResponse processPayment(Long orderId, PaymentRequest request) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new OrderNotFoundException(orderId));
+        
+        PaymentGatewayResponse gatewayResponse = paymentGateway.processPayment(
+            request.getPaymentMethod(),
+            order.getTotalAmount(),
+            request.getPaymentDetails()
+        );
+        
+        if (gatewayResponse.isSuccess()) {
+            order.setStatus(OrderStatus.PAID);
+            order.setPaymentId(gatewayResponse.getTransactionId());
+            order.setPaidAt(LocalDateTime.now());
+            orderRepository.save(order);
+            
+            return PaymentResponse.success(gatewayResponse.getTransactionId());
+        } else {
+            order.setStatus(OrderStatus.PAYMENT_FAILED);
+            orderRepository.save(order);
+            
+            return PaymentResponse.failed(gatewayResponse.getErrorMessage());
+        }
+    }
+}
+
+@Service
+public class DeliveryService {
+    
+    private final DeliveryClient deliveryClient;
+    
+    public Delivery scheduleDelivery(Order order) {
+        DeliveryRequest request = new DeliveryRequest();
+        request.setOrderId(order.getId());
+        request.setCustomerAddress(order.getCustomer().getAddress());
+        request.setItems(order.getItems());
+        
+        DeliveryResponse response = deliveryClient.scheduleDelivery(request);
+        
+        Delivery delivery = new Delivery();
+        delivery.setOrder(order);
+        delivery.setDeliveryId(response.getDeliveryId());
+        delivery.setEstimatedDate(response.getEstimatedDeliveryDate());
+        delivery.setStatus(DeliveryStatus.SCHEDULED);
+        
+        return deliveryRepository.save(delivery);
+    }
+}
+
+@Configuration
+public class DatabaseConfig {
+    
+    @Bean
+    public DataSource dataSource() {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:postgresql://database-server:5432/shop_db");
+        config.setUsername("shop_user");
+        config.setPassword("password");
+        config.setMaximumPoolSize(20);
+        return new HikariDataSource(config);
+    }
+}
