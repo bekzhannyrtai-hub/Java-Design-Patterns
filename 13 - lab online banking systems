@@ -1,0 +1,150 @@
+@Component
+public class AccountService {
+    
+    @Autowired
+    private AccountRepository accountRepository;
+    
+    public Account createAccount(String customerId, AccountType type) {
+        Account account = new Account();
+        account.setAccountNumber(generateAccountNumber());
+        account.setCustomerId(customerId);
+        account.setType(type);
+        account.setBalance(BigDecimal.ZERO);
+        account.setCreatedDate(LocalDateTime.now());
+        
+        return accountRepository.save(account);
+    }
+    
+    public BigDecimal getBalance(String accountNumber) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+            .orElseThrow(() -> new AccountNotFoundException(accountNumber));
+        return account.getBalance();
+    }
+    
+    public List<Account> getCustomerAccounts(String customerId) {
+        return accountRepository.findByCustomerId(customerId);
+    }
+}
+
+@Component
+@Transactional
+public class TransferService {
+    
+    @Autowired
+    private AccountRepository accountRepository;
+    
+    @Autowired
+    private TransactionRepository transactionRepository;
+    
+    public TransferResult transfer(String fromAccount, String toAccount, BigDecimal amount) {
+        Account source = accountRepository.findByAccountNumber(fromAccount)
+            .orElseThrow(() -> new AccountNotFoundException(fromAccount));
+        
+        Account destination = accountRepository.findByAccountNumber(toAccount)
+            .orElseThrow(() -> new AccountNotFoundException(toAccount));
+        
+        if (source.getBalance().compareTo(amount) < 0) {
+            throw new InsufficientFundsException(fromAccount);
+        }
+        
+        source.setBalance(source.getBalance().subtract(amount));
+        destination.setBalance(destination.getBalance().add(amount));
+        
+        accountRepository.save(source);
+        accountRepository.save(destination);
+        
+        Transaction transaction = new Transaction();
+        transaction.setFromAccount(fromAccount);
+        transaction.setToAccount(toAccount);
+        transaction.setAmount(amount);
+        transaction.setType(TransactionType.TRANSFER);
+        transaction.setTimestamp(LocalDateTime.now());
+        
+        transactionRepository.save(transaction);
+        
+        return new TransferResult(true, "Transfer completed", transaction.getId());
+    }
+}
+
+@Component
+public class ReportService {
+    
+    @Autowired
+    private TransactionRepository transactionRepository;
+    
+    public BankStatement generateStatement(String accountNumber, 
+                                          LocalDate startDate, 
+                                          LocalDate endDate) {
+        List<Transaction> transactions = transactionRepository
+            .findByAccountAndDateRange(accountNumber, startDate, endDate);
+        
+        BigDecimal openingBalance = calculateOpeningBalance(accountNumber, startDate);
+        BigDecimal closingBalance = calculateClosingBalance(accountNumber, endDate);
+        
+        BankStatement statement = new BankStatement();
+        statement.setAccountNumber(accountNumber);
+        statement.setPeriod(startDate, endDate);
+        statement.setOpeningBalance(openingBalance);
+        statement.setClosingBalance(closingBalance);
+        statement.setTransactions(transactions);
+        
+        return statement;
+    }
+    
+    public MonthlyReport generateMonthlyReport(String customerId, int year, int month) {
+        MonthlyReport report = new MonthlyReport();
+        report.setCustomerId(customerId);
+        report.setMonth(month);
+        report.setYear(year);
+        report.setGeneratedDate(LocalDateTime.now());
+        
+        report.setTotalDeposits(calculateTotalDeposits(customerId, year, month));
+        report.setTotalWithdrawals(calculateTotalWithdrawals(customerId, year, month));
+        report.setAccountSummaries(getAccountSummaries(customerId));
+        
+        return report;
+    }
+}
+
+@RestController
+@RequestMapping("/api/banking")
+public class BankingController {
+    
+    @Autowired
+    private AccountService accountService;
+    
+    @Autowired
+    private TransferService transferService;
+    
+    @Autowired
+    private ReportService reportService;
+    
+    @PostMapping("/accounts")
+    public ResponseEntity<Account> createAccount(@RequestBody CreateAccountRequest request) {
+        Account account = accountService.createAccount(
+            request.getCustomerId(), 
+            request.getAccountType()
+        );
+        return ResponseEntity.ok(account);
+    }
+    
+    @PostMapping("/transfer")
+    public ResponseEntity<TransferResult> transfer(@RequestBody TransferRequest request) {
+        TransferResult result = transferService.transfer(
+            request.getFromAccount(),
+            request.getToAccount(),
+            request.getAmount()
+        );
+        return ResponseEntity.ok(result);
+    }
+    
+    @GetMapping("/statement/{accountNumber}")
+    public ResponseEntity<BankStatement> getStatement(
+            @PathVariable String accountNumber,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        
+        BankStatement statement = reportService.generateStatement(accountNumber, from, to);
+        return ResponseEntity.ok(statement);
+    }
+}
